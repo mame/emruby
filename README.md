@@ -10,6 +10,10 @@ DEMO: https://mame.github.io/emruby/
 
 NOTE: This is still just a proof-of-concept.  I just confirmed miniruby can be built.  Need more work to make this practical.  Your contribution is welcome!
 
+## How to pronounce
+
+To differentiate emruby from [mruby](https://github.com/mruby/mruby), please pronounce emruby as "Ee-Em-Ruby," not "Em-Ruby".  This is as per [matz's request](https://twitter.com/yukihiro_matz/status/964313657898295296).
+
 ## License
 
 The MIT License (MIT)
