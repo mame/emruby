@@ -5,6 +5,6 @@ git clone https://github.com/ruby/ruby.git --depth 1
 cd ruby
 patch -p1 < ../emscripten.patch
 autoconf
-emconfigure ./configure CFLAGS="-m32 -s EMULATE_FUNCTION_POINTER_CASTS=1"
+emconfigure ./configure --host wasm32-unknown-emscripten
 emmake make V=1 miniruby.js EXEEXT=.js
-cp miniruby.js ../docs
+cp miniruby.js miniruby.wasm ../docs

@@ -5,7 +5,7 @@ DEMO: https://mame.github.io/emruby/
 ## How to build
 
 1. Setup emsdk ([Mozilla's document](https://developer.mozilla.org/en-US/docs/WebAssembly/C_to_wasm)).  You need to be able to use `emcc`, `emconfigure`, and `emmake`.
-2. Run the build script: `sh build.sh`.
+2. Run the build script: `sh run.sh`.
 3. You will see `docs/miniruby.js`.
 
 NOTE: This is still just a proof-of-concept.  I just confirmed miniruby can be built.  Need more work to make this practical.  Your contribution is welcome!
@@ -18,7 +18,7 @@ To differentiate emruby from [mruby](https://github.com/mruby/mruby), please pro
 
 The MIT License (MIT)
 
-Copyright (c) 2018 Yusuke Endoh
+Copyright (c) 2018, 2021 Yusuke Endoh
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
