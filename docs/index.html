@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Emscripten-Generated Code</title>
+    <title>Emscripten'ed Ruby (MRI)</title>
     <style>
       .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
       textarea.emscripten { font-family: monospace; width: 100%; }
     </style>
   </head>
   <body>
-    <h1>emscripten'ed miniruby</h1>
+    <h1>Emscripten'ed Ruby (MRI)</h1>
     <div class="emscripten" id="status">Downloading...</div>
     <div class="emscripten">
       <progress value="0" max="100" id="progress" hidden=1></progress>  
@@ -19,8 +19,12 @@
     <hr/>
     input:<br />
     <textarea class="emscripten" id="input" rows="8">p RUBY_DESCRIPTION
+
 p 3 + 4
-p emscripten_run_script_int("'javascript'.length")</textarea>
+p emscripten_run_script_int("'javascript'.length")
+
+require "stringio"
+p StringIO.new("foobar").read(3)</textarea>
     </br>
     <input type="button" id="run" disabled value="Run (Only once)" />
     </br>
@@ -108,6 +112,6 @@ p emscripten_run_script_int("'javascript'.length")</textarea>
         return lines[lineno++];
       };
     </script>
-    <script async type="text/javascript" src="miniruby.js"></script>
+    <script async type="text/javascript" src="ruby"></script>
   </body>
 </html>

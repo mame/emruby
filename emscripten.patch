@@ -1,5 +1,5 @@
 diff --git a/process.c b/process.c
-index 674f05dd6c..f52d6cb6a5 100644
+index 0f29a6dd52..7a17f24e19 100644
 --- a/process.c
 +++ b/process.c
 @@ -116,6 +116,7 @@ int initgroups(const char *, rb_gid_t);
@@ -10,7 +10,7 @@ index 674f05dd6c..f52d6cb6a5 100644
  
  /* define system APIs */
  #ifdef _WIN32
-@@ -8605,6 +8606,21 @@ proc_rb_f_kill(int c, const VALUE *v, VALUE _)
+@@ -8604,6 +8605,21 @@ proc_rb_f_kill(int c, const VALUE *v, VALUE _)
      return rb_f_kill(c, v);
  }
  
@@ -32,7 +32,7 @@ index 674f05dd6c..f52d6cb6a5 100644
  VALUE rb_mProcess;
  static VALUE rb_mProcUID;
  static VALUE rb_mProcGID;
-@@ -8633,6 +8649,8 @@ InitVM_process(void)
+@@ -8632,6 +8648,8 @@ InitVM_process(void)
      rb_define_global_function("sleep", rb_f_sleep, -1);
      rb_define_global_function("exit", f_exit, -1);
      rb_define_global_function("abort", f_abort, -1);
