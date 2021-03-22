@@ -86,12 +86,13 @@ const Home: FC = () => {
   return (
     <div className="container-fluid">
       <Head>
-        <title>emruby: Emscripten&apos;ed Ruby</title>
+        <title>emruby: A Ruby interpreter on browser</title>
       </Head>
-      <h1>emruby: Emscripten&apos;ed Ruby</h1>
+      <h1>emruby: A Ruby interpreter on browser</h1>
       <p>
         This is a demonstration of Ruby interpreter (MRI) that works on browser
-        (experimental).
+        (experimental). Powered by{" "}
+        <a href="https://emscripten.org/">Emscripten</a>.
       </p>
       <h2 className="mt-4">Code</h2>
       <Editor text={input} onChange={(text) => setInput(text)} />

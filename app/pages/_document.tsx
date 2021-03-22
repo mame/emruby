@@ -5,6 +5,30 @@ export default class MyDocument extends Document {
     return (
       <Html>
         <Head>
+          <meta
+            name="description"
+            content="emruby: A Ruby interpreter on browser"
+          />
+          <meta property="og:type" content="website" />
+          <meta
+            property="og:title"
+            content="emruby: A Ruby interpreter on browser"
+          />
+          <meta property="og:url" content={process.env.BASE_PATH} />
+          <meta
+            property="og:description"
+            content="A demonstration of emruby, a MRI that works on browser"
+          />
+          <meta
+            property="og:site_name"
+            content="emruby: A Ruby interpreter on browser"
+          />
+          <meta
+            property="og:image"
+            content={`${process.env.BASE_PATH}/ogp.png`}
+          />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="format-detection" content="telephone=no" />
           <link
             rel="apple-touch-icon"
             sizes="180x180"
@@ -22,6 +46,13 @@ export default class MyDocument extends Document {
             sizes="16x16"
             href={`${process.env.BASE_PATH}/favicon-16x16.png`}
           />
+          <link rel="icon" href={`${process.env.BASE_PATH}/favicon.ico}`} />
+          <link
+            rel="mask-icon"
+            href={`${process.env.BASE_PATH}/safari-pinned-tab.svg`}
+            color="#03a9f4"
+          />
+          <meta name="msapplication-TileColor" content="#ce0000" />
           <meta name="theme-color" content="#ce0000" />
         </Head>
         <body>
