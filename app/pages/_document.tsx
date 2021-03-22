@@ -28,6 +28,24 @@ export default class MyDocument extends Document {
             content={`${process.env.BASE_PATH}/ogp.png`}
           />
           <meta name="twitter:card" content="summary_large_image" />
+          <meta
+            property="twitter:title"
+            content="emruby: A Ruby interpreter on browser"
+          />
+          <meta name="twitter:site" content="@mametter" />
+          <meta name="twitter:creator" content="@mametter" />
+          <meta
+            name="twitter:title"
+            content="emruby: A Ruby interpreter on browser"
+          />
+          <meta
+            name="twitter:description"
+            content="A demonstration of emruby, a MRI that works on browser"
+          ></meta>
+          <meta
+            name="twitter:image"
+            content={`${process.env.BASE_PATH}/ogp.png`}
+          ></meta>
           <meta name="format-detection" content="telephone=no" />
           <link
             rel="apple-touch-icon"
