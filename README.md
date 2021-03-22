@@ -1,12 +1,14 @@
 # emruby: emscripten'ed ruby
 
-DEMO: https://mame.github.io/emruby/
+Demo: https://mame.github.io/emruby/
 
 ## How to build
 
-1. Setup emsdk ([Mozilla's document](https://developer.mozilla.org/en-US/docs/WebAssembly/C_to_wasm)).  You need to be able to use `emcc`, `emconfigure`, and `emmake`.
-2. Run the build script: `sh run.sh`.
-3. You will see `docs/miniruby.js`.
+1. Setup emsdk ([Mozilla's document](https://developer.mozilla.org/en-US/docs/WebAssembly/C_to_wasm)).  Make sure you can use `emcc`, `emconfigure`, and `emmake`.
+2. Run the build script: `sh build.sh`.
+3. Run `cd app && npm install && npx next build && npx next export -o ../docs`
+
+You can test the app by running `cd app && npx next dev` and opening http://localhost:3000/.
 
 NOTE: This is still just a proof-of-concept.  I just confirmed miniruby can be built.  Need more work to make this practical.  Your contribution is welcome!
 
