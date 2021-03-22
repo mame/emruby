@@ -21,7 +21,7 @@ self.addEventListener("message", (msg) => {
 
 let i = 0;
 const mystdin = () => {
-  self.postMessage(-1);
+  self.postMessage(["input"]);
   Atomics.wait(buffer, i, -1);
   const key = Atomics.load(buffer, i);
   Atomics.store(buffer, i, -1);
@@ -31,6 +31,7 @@ const mystdin = () => {
 
 self.Module = {
   locateFile: (path) => root + path,
+  postRun: [() => self.postMessage(["terminated"])],
   thisProgram: "ruby",
   arguments: [
     "-I/",
@@ -41,9 +42,9 @@ self.Module = {
     "def $stdout.tty? = true; ENV['TERM']='xterm'; IRB.start(__FILE__)",
   ],
   stdin: mystdin,
-  stdout: self.postMessage,
-  stderr: self.postMessage,
-  setStatus: (msg: string) => self.postMessage(msg),
+  stdout: (key) => self.postMessage(["output", key]),
+  stderr: (key) => self.postMessage(["output", key]),
+  setStatus: (msg: string) => self.postMessage(["status", msg]),
 };
 
 importScripts(root + "fs.js");

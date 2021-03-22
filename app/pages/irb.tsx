@@ -38,31 +38,40 @@ const Irb: FC = () => {
       i = (i + 1) % 1024;
     };
 
-    worker.onmessage = (evt) => {
-      const key = evt.data;
-      if (typeof key == "string") {
-        setMessage(<>Status: {key}</>);
-      } else if (key >= 0) {
-        xterm.write(String.fromCharCode(key));
-      } else {
-        setMessage(
-          <>
-            Ready! Type <code>RUBY_DESCRIPTION</code> and press the Enter key
-          </>
-        );
-        if (input_buffer.length == 0) {
-          localEcho.read("> ").then((line: string) => {
-            xterm.write("\x1b[A> ");
-            const s = line + "\n";
-            for (let j = 0; j < s.length; j++) {
-              input_buffer.push(s.charCodeAt(j));
-            }
-            input_buffer.push(-1);
+    worker.onmessage = (e) => {
+      const evt = e.data;
+      switch (evt[0]) {
+        case "status":
+          if (evt[1]) setMessage(<>Status: {evt[1]}</>);
+          break;
+        case "terminated":
+          setMessage(
+            <>Status: Terminated. Please reload this page to re-run irb.</>
+          );
+          break;
+        case "output":
+          xterm.write(String.fromCharCode(evt[1]));
+          break;
+        case "input":
+          setMessage(
+            <>
+              Ready! Type <code>RUBY_DESCRIPTION</code> and press the Enter key
+            </>
+          );
+          if (input_buffer.length == 0) {
+            localEcho.read("> ").then((line: string) => {
+              xterm.write("\x1b[A> ");
+              const s = line + "\n";
+              for (let j = 0; j < s.length; j++) {
+                input_buffer.push(s.charCodeAt(j));
+              }
+              input_buffer.push(-1);
+              feed();
+            });
+          } else {
             feed();
-          });
-        } else {
-          feed();
-        }
+          }
+          break;
       }
     };
 
