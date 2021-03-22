@@ -46,7 +46,7 @@ export default class MyDocument extends Document {
             sizes="16x16"
             href={`${process.env.BASE_PATH}/favicon-16x16.png`}
           />
-          <link rel="icon" href={`${process.env.BASE_PATH}/favicon.ico}`} />
+          <link rel="icon" href={`${process.env.BASE_PATH}/favicon.ico`} />
           <link
             rel="mask-icon"
             href={`${process.env.BASE_PATH}/safari-pinned-tab.svg`}
