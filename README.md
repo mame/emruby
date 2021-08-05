@@ -8,7 +8,7 @@ Demo: https://mame.github.io/emruby/
 2. Run the build script: `sh build.sh`.
 3. Run `cd app && npm install && npx next build && npx next export -o ../docs`
 
-You can test the app by running `cd app && npx next dev` and opening http://localhost:3000/.
+You can test the app by running `cd app && node server.js` and opening http://localhost:3000/.
 
 I have confirmed that "emscripten" package in Ubuntu 21.04 can also be used to build emruby. But emcc in the Ubuntu package emits by default a `warning: LLVM version appears incorrect (seeing "12.0", expected "11.0") [-Wversion-check]`, which makes `./configure` fail. You need to set `export EMCC_SKIP_SANITY_CHECK=1` to disable the warning.
 
