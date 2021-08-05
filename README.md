@@ -10,7 +10,7 @@ Demo: https://mame.github.io/emruby/
 
 You can test the app by running `cd app && npx next dev` and opening http://localhost:3000/.
 
-NOTE: This is still just a proof-of-concept.  I just confirmed miniruby can be built.  Need more work to make this practical.  Your contribution is welcome!
+I have confirmed that "emscripten" package in Ubuntu 21.04 can also be used to build emruby. But emcc in the Ubuntu package emits by default a `warning: LLVM version appears incorrect (seeing "12.0", expected "11.0") [-Wversion-check]`, which makes `./configure` fail. You need to set `export EMCC_SKIP_SANITY_CHECK=1` to disable the warning.
 
 ## How to pronounce
 

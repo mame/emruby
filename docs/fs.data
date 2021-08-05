@@ -93,7 +93,7 @@ module RbConfig
   CONFIG["DLDSHARED"] = "$(LD)"
   CONFIG["DLDLIBS"] = " -lc"
   CONFIG["SOLIBS"] = "$(MAINLIBS)"
-  CONFIG["LIBRUBYARG_SHARED"] = ""
+  CONFIG["LIBRUBYARG_SHARED"] = " $(MAINLIBS)"
   CONFIG["LIBRUBYARG_STATIC"] = "-l$(RUBY_SO_NAME)-static $(MAINLIBS)"
   CONFIG["LIBRUBYARG"] = "$(LIBRUBYARG_STATIC)"
   CONFIG["LIBRUBY"] = "$(LIBRUBY_A)"
@@ -106,7 +106,7 @@ module RbConfig
   CONFIG["EXTDLDFLAGS"] = ""
   CONFIG["EXTLDFLAGS"] = ""
   CONFIG["strict_warnflags"] = "-std=gnu99"
-  CONFIG["warnflags"] = "-Wall -Wextra -Werror=deprecated-declarations -Werror=division-by-zero -Werror=implicit-function-declaration -Werror=implicit-int -Werror=misleading-indentation -Werror=pointer-arith -Werror=shorten-64-to-32 -Werror=write-strings -Wmissing-noreturn -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wunused-variable -Werror=extra-tokens"
+  CONFIG["warnflags"] = "-Wall -Wextra -Werror=deprecated-declarations -Werror=division-by-zero -Werror=implicit-function-declaration -Werror=implicit-int -Werror=misleading-indentation -Werror=pointer-arith -Werror=shorten-64-to-32 -Werror=write-strings -Wmissing-noreturn -Wno-constant-logical-operand -Wno-long-long -Wno-missing-field-initializers -Wno-overlength-strings -Wno-parentheses-equality -Wno-self-assign -Wno-tautological-compare -Wno-unused-parameter -Wno-unused-value -Wunused-variable -Werror=extra-tokens -Werror=undef"
   CONFIG["debugflags"] = "-g0"
   CONFIG["optflags"] = "-Os -fno-fast-math"
   CONFIG["NULLCMD"] = ":"
@@ -145,6 +145,7 @@ module RbConfig
   CONFIG["ALLOCA"] = ""
   CONFIG["dsymutil"] = ""
   CONFIG["codesign"] = ""
+  CONFIG["cleanlibs"] = ""
   CONFIG["POSTLINK"] = ":"
   CONFIG["WERRORFLAG"] = "-Werror"
   CONFIG["CHDIR"] = "cd -P"
@@ -153,11 +154,11 @@ module RbConfig
   CONFIG["RMDIR"] = "rmdir --ignore-fail-on-non-empty"
   CONFIG["CP"] = "cp"
   CONFIG["RM"] = "rm -f"
-  CONFIG["PKG_CONFIG"] = ""
+  CONFIG["PKG_CONFIG"] = "pkg-config"
   CONFIG["DOXYGEN"] = ""
   CONFIG["DOT"] = ""
-  CONFIG["MAKEDIRS"] = "/bin/mkdir -p"
-  CONFIG["MKDIR_P"] = "/bin/mkdir -p"
+  CONFIG["MAKEDIRS"] = "/usr/bin/mkdir -p"
+  CONFIG["MKDIR_P"] = "/usr/bin/mkdir -p"
   CONFIG["INSTALL_DATA"] = "$(INSTALL) -m 644"
   CONFIG["INSTALL_SCRIPT"] = "$(INSTALL)"
   CONFIG["INSTALL_PROGRAM"] = "$(INSTALL)"
@@ -168,7 +169,7 @@ module RbConfig
   CONFIG["ASFLAGS"] = ""
   CONFIG["ARFLAGS"] = "rcD "
   CONFIG["try_header"] = ""
-  CONFIG["CC_VERSION_MESSAGE"] = "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 2.0.15 (7685e4ec373dca607781d3995c3fc2ba229ce9d8)\nCopyright (C) 2014 the Emscripten authors (see AUTHORS.txt)\nThis is free and open source software under the MIT license.\nThere is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n  "
+  CONFIG["CC_VERSION_MESSAGE"] = "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 2.0.12\nCopyright (C) 2014 the Emscripten authors (see AUTHORS.txt)\nThis is free and open source software under the MIT license.\nThere is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n  "
   CONFIG["CC_VERSION"] = "$(CC) --version"
   CONFIG["MJIT_CC"] = "emcc"
   CONFIG["CSRCFLAG"] = ""
@@ -177,8 +178,8 @@ module RbConfig
   CONFIG["CPPOUTFILE"] = "-o conftest.i"
   CONFIG["GNU_LD"] = "no"
   CONFIG["GCC"] = "yes"
-  CONFIG["EGREP"] = "/bin/grep -E"
-  CONFIG["GREP"] = "/bin/grep"
+  CONFIG["EGREP"] = "/usr/bin/grep -E"
+  CONFIG["GREP"] = "/usr/bin/grep"
   CONFIG["CPP"] = "$(CC) -E"
   CONFIG["CXXFLAGS"] = ""
   CONFIG["OBJEXT"] = "o"
@@ -254,8 +255,8 @@ module RbConfig
   CONFIG["PACKAGE_NAME"] = ""
   CONFIG["PATH_SEPARATOR"] = ":"
   CONFIG["SHELL"] = "/bin/bash"
-  CONFIG["UNICODE_VERSION"] = "12.1.0"
-  CONFIG["UNICODE_EMOJI_VERSION"] = "12.1"
+  CONFIG["UNICODE_VERSION"] = "13.0.0"
+  CONFIG["UNICODE_EMOJI_VERSION"] = "13.1"
   CONFIG["platform"] = "$(arch)"
   CONFIG["archdir"] = "$(rubyarchdir)"
   CONFIG["topdir"] = File.dirname(__FILE__)
@@ -361,6 +362,30 @@ module RbConfig
   end
 end
 CROSS_COMPILING = nil unless defined? CROSS_COMPILING
+class DummyIO
+  def write(str)
+    str.bytes do |ch|
+      emscripten_run_script_int("Module.test_func(#{ ch })")
+    end
+  end
+
+  def tty?
+    true
+  end
+end
+
+#$stdout = $stderr = DummyIO.new
+
+def $stdout.tty? = true
+
+$LOAD_PATH << "/"
+$LOAD_PATH << "/lib"
+$LOAD_PATH << "/.ext/common"
+
+require "irb"
+
+ENV["TERM"] = "xterm"
+IRB.start(__FILE__)
 # frozen_string_literal: false
 # = monitor.rb
 #
@@ -1632,7 +1657,7 @@ module Gem
 
   def self.default_bindir
     if defined? RUBY_FRAMEWORK_VERSION # mac framework support
-      '/usr/bin'
+      '/usr/local/bin'
     else # generic install
       RbConfig::CONFIG['bindir']
     end
@@ -1729,24 +1754,71 @@ module Gem
 end
 # frozen_string_literal: true
 ##
-# Provides a single method +deprecate+ to be used to declare when
-# something is going away.
+# Provides 3 methods for declaring when something is going away.
+#
+# +deprecate(name, repl, year, month)+:
+#     Indicate something may be removed on/after a certain date.
+#
+# +rubygems_deprecate(name, replacement=:none)+:
+#     Indicate something will be removed in the next major RubyGems version,
+#     and (optionally) a replacement for it.
+#
+# +rubygems_deprecate_command+:
+#     Indicate a RubyGems command (in +lib/rubygems/commands/*.rb+) will be
+#     removed in the next RubyGems version.
+#
+# Also provides +skip_during+ for temporarily turning off deprecation warnings.
+# This is intended to be used in the test suite, so deprecation warnings
+# don't cause test failures if you need to make sure stderr is otherwise empty.
+#
+#
+# Example usage of +deprecate+ and +rubygems_deprecate+:
 #
 #     class Legacy
-#       def self.klass_method
+#       def self.some_class_method
 #         # ...
 #       end
 #
-#       def instance_method
+#       def some_instance_method
+#         # ...
+#       end
+#
+#       def some_old_method
 #         # ...
 #       end
 #
 #       extend Gem::Deprecate
-#       deprecate :instance_method, "X.z", 2011, 4
+#       deprecate :some_instance_method, "X.z", 2011, 4
+#       rubygems_deprecate :some_old_method, "Modern#some_new_method"
 #
 #       class << self
 #         extend Gem::Deprecate
-#         deprecate :klass_method, :none, 2011, 4
+#         deprecate :some_class_method, :none, 2011, 4
+#       end
+#     end
+#
+#
+# Example usage of +rubygems_deprecate_command+:
+#
+#     class Gem::Commands::QueryCommand < Gem::Command
+#       extend Gem::Deprecate
+#       rubygems_deprecate_command
+#
+#       # ...
+#     end
+#
+#
+# Example usage of +skip_during+:
+#
+#     class TestSomething < Gem::Testcase
+#       def test_some_thing_with_deprecations
+#         Gem::Deprecate.skip_during do
+#           actual_stdout, actual_stderr = capture_output do
+#             Gem.something_deprecated
+#           end
+#           assert_empty actual_stdout
+#           assert_equal(expected, actual_stderr)
+#         end
 #       end
 #     end
 
@@ -1789,12 +1861,13 @@ module Gem::Deprecate
         target = klass ? "#{self}." : "#{self.class}#"
         msg = [ "NOTE: #{target}#{name} is deprecated",
                 repl == :none ? " with no replacement" : "; use #{repl} instead",
-                ". It will be removed on or after %4d-%02d-01." % [year, month],
+                ". It will be removed on or after %4d-%02d." % [year, month],
                 "\n#{target}#{name} called from #{Gem.location_of_caller.join(":")}",
         ]
         warn "#{msg.join}." unless Gem::Deprecate.skip
         send old, *args, &block
       end
+      ruby2_keywords name if respond_to?(:ruby2_keywords, true)
     end
   end
 
@@ -1819,6 +1892,7 @@ module Gem::Deprecate
         warn "#{msg.join}." unless Gem::Deprecate.skip
         send old, *args, &block
       end
+      ruby2_keywords name if respond_to?(:ruby2_keywords, true)
     end
   end
 
@@ -2273,7 +2347,7 @@ class Gem::SystemExitException < SystemExit
   def initialize(exit_code)
     @exit_code = exit_code
 
-    super "Exiting RubyGems with exit_code #{exit_code}"
+    super exit_code, "Exiting RubyGems with exit_code #{exit_code}"
   end
 end
 
@@ -3520,7 +3594,7 @@ class Gem::StreamUI
   # A progress reporter that behaves nicely with threaded downloading.
 
   class ThreadedDownloadReporter
-    MUTEX = Mutex.new
+    MUTEX = Thread::Mutex.new
 
     ##
     # The current file name being displayed
@@ -3741,25 +3815,26 @@ class Gem::SpecificationPolicy
     end
 
     metadata.each do |key, value|
+      entry = "metadata['#{key}']"
       if !key.kind_of?(String)
         error "metadata keys must be a String"
       end
 
       if key.size > 128
-        error "metadata key too large (#{key.size} > 128)"
+        error "metadata key is too large (#{key.size} > 128)"
       end
 
       if !value.kind_of?(String)
-        error "metadata values must be a String"
+        error "#{entry} value must be a String"
       end
 
       if value.size > 1024
-        error "metadata value too large (#{value.size} > 1024)"
+        error "#{entry} value is too large (#{value.size} > 1024)"
       end
 
       if METADATA_LINK_KEYS.include? key
         if value !~ VALID_URI_PATTERN
-          error "metadata['#{key}'] has invalid link: #{value.inspect}"
+          error "#{entry} has invalid link: #{value.inspect}"
         end
       end
     end
@@ -4205,7 +4280,7 @@ class Gem::Platform
     when String then
       arch = arch.split '-'
 
-      if arch.length > 2 and arch.last !~ /\d+(\.\d+)?$/ # reassemble x86-linux-{libc}
+      if arch.length > 2 and arch.last !~ /\d/ # reassemble x86-linux-gnu
         extra = arch.pop
         arch.last << "-#{extra}"
       end
@@ -4285,8 +4360,7 @@ class Gem::Platform
   ##
   # Does +other+ match this platform?  Two platforms match if they have the
   # same CPU, or either has a CPU of 'universal', they have the same OS, and
-  # they have the same version, or either has no version (except for 'linux'
-  # where the version is the libc name, with no version standing for 'gnu')
+  # they have the same version, or either has no version.
   #
   # Additionally, the platform will match if the local CPU is 'arm' and the
   # other CPU starts with "arm" (for generic ARM family support).
@@ -4302,10 +4376,7 @@ class Gem::Platform
     @os == other.os and
 
     # version
-    (
-      (@os != 'linux' and (@version.nil? or other.version.nil?)) or
-      @version == other.version
-    )
+    (@version.nil? or other.version.nil? or @version == other.version)
   end
 
   ##
@@ -4954,24 +5025,19 @@ class Gem::Requirement
   end
 
   def marshal_dump # :nodoc:
-    fix_syck_default_key_in_requirements
-
     [@requirements]
   end
 
   def marshal_load(array) # :nodoc:
     @requirements = array[0]
 
-    fix_syck_default_key_in_requirements
+    raise TypeError, "wrong @requirements" unless Array === @requirements
   end
 
   def yaml_initialize(tag, vals) # :nodoc:
     vals.each do |ivar, val|
       instance_variable_set "@#{ivar}", val
     end
-
-    Gem.load_yaml
-    fix_syck_default_key_in_requirements
   end
 
   def init_with(coder) # :nodoc:
@@ -5006,8 +5072,7 @@ class Gem::Requirement
   def satisfied_by?(version)
     raise ArgumentError, "Need a Gem::Version: #{version.inspect}" unless
       Gem::Version === version
-    # #28965: syck has a bug with unquoted '=' YAML.loading as YAML::DefaultKey
-    requirements.all? {|op, rv| (OPS[op] || OPS["="]).call version, rv }
+    requirements.all? {|op, rv| OPS[op].call version, rv }
   end
 
   alias :=== :satisfied_by?
@@ -5048,19 +5113,6 @@ class Gem::Requirement
 
   def _tilde_requirements
     @_tilde_requirements ||= _sorted_requirements.select {|r| r.first == "~>" }
-  end
-
-  private
-
-  def fix_syck_default_key_in_requirements # :nodoc:
-    Gem.load_yaml
-
-    # Fixup the Syck DefaultKey bug
-    @requirements.each do |r|
-      if r[0].kind_of? Gem::SyckDefaultKey
-        r[0] = "="
-      end
-    end
   end
 end
 
@@ -5177,7 +5229,7 @@ class Gem::Specification < Gem::BasicSpecification
   # rubocop:disable Style/MutableConstant
   LOAD_CACHE = {} # :nodoc:
   # rubocop:enable Style/MutableConstant
-  LOAD_CACHE_MUTEX = Mutex.new
+  LOAD_CACHE_MUTEX = Thread::Mutex.new
 
   private_constant :LOAD_CACHE if defined? private_constant
 
@@ -6762,12 +6814,6 @@ class Gem::Specification < Gem::BasicSpecification
             when String then
               if DateTimeFormat =~ date
                 Time.utc($1.to_i, $2.to_i, $3.to_i)
-
-              # Workaround for where the date format output from psych isn't
-              # parsed as a Time object by syck and thus comes through as a
-              # string.
-              elsif /\A(\d{4})-(\d{2})-(\d{2}) \d{2}:\d{2}:\d{2}\.\d+?Z\z/ =~ date
-                Time.utc($1.to_i, $2.to_i, $3.to_i)
               else
                 raise(Gem::InvalidSpecificationException,
                       "invalid date format in specification: #{date.inspect}")
@@ -7493,7 +7539,6 @@ class Gem::Specification < Gem::BasicSpecification
   # still have their default values are omitted.
 
   def to_ruby
-    require_relative 'openssl'
     mark_version
     result = []
     result << "# -*- encoding: utf-8 -*-"
@@ -7527,14 +7572,19 @@ class Gem::Specification < Gem::BasicSpecification
       :has_rdoc,
       :default_executable,
       :metadata,
+      :signing_key,
     ]
 
     @@attributes.each do |attr_name|
       next if handled.include? attr_name
       current_value = self.send(attr_name)
       if current_value != default_value(attr_name) || self.class.required_attribute?(attr_name)
-        result << "  s.#{attr_name} = #{ruby_code current_value}" unless defined?(OpenSSL::PKey::RSA) && current_value.is_a?(OpenSSL::PKey::RSA)
+        result << "  s.#{attr_name} = #{ruby_code current_value}"
       end
+    end
+
+    if String === signing_key
+      result << "  s.signing_key = #{signing_key.dump}.freeze"
     end
 
     if @installed_by_version
@@ -8698,7 +8748,7 @@ module Gem
   @configuration = nil
   @gemdeps = nil
   @loaded_specs = {}
-  LOADED_SPECS_MUTEX = Mutex.new
+  LOADED_SPECS_MUTEX = Thread::Mutex.new
   @path_to_default_spec_map = {}
   @platforms = []
   @ruby = nil
@@ -9146,24 +9196,14 @@ An Array (#{env.inspect}) was passed in from #{caller[3]}
       # Try requiring the gem version *or* stdlib version of psych.
       require 'psych'
     rescue ::LoadError
-      # If we can't load psych, thats fine, go on.
+      # If we can't load psych, that's fine, go on.
     else
-      # If 'yaml' has already been required, then we have to
-      # be sure to switch it over to the newly loaded psych.
-      if defined?(YAML::ENGINE) && YAML::ENGINE.yamler != "psych"
-        YAML::ENGINE.yamler = "psych"
-      end
-
       require 'rubygems/psych_additions'
       require 'rubygems/psych_tree'
     end
 
     require 'yaml'
     require 'rubygems/safe_yaml'
-
-    # Now that we're sure some kind of yaml library is loaded, pull
-    # in our hack to deal with Syck's DefaultKey ugliness.
-    require 'rubygems/syck_hack'
 
     @yaml_loaded = true
   end
@@ -9333,7 +9373,7 @@ An Array (#{env.inspect}) was passed in from #{caller[3]}
   ##
   # Safely write a file in binary mode on all platforms.
   def self.write_binary(path, data)
-    open(path, 'wb') do |io|
+    File.open(path, 'wb') do |io|
       begin
         io.flock(File::LOCK_EX)
       rescue *WRITE_BINARY_ERRORS
@@ -9344,7 +9384,7 @@ An Array (#{env.inspect}) was passed in from #{caller[3]}
     if Thread.main != Thread.current
       raise
     else
-      open(path, 'wb') do |io|
+      File.open(path, 'wb') do |io|
         io.write data
       end
     end
@@ -9977,19 +10017,26 @@ class Gem::PathSupport
   end
 end
 module DidYouMean
-  VERSION = "1.5.0"
+  VERSION = "1.6.0-alpha"
 end
 module DidYouMean
   module Correctable
+    SKIP_TO_S_FOR_SUPER_LOOKUP = true
+    private_constant :SKIP_TO_S_FOR_SUPER_LOOKUP
+
     def original_message
-      method(:to_s).super_method.call
+      meth = method(:to_s)
+      while meth.owner.const_defined?(:SKIP_TO_S_FOR_SUPER_LOOKUP)
+        meth = meth.super_method
+      end
+      meth.call
     end
 
     def to_s
       msg = super.dup
       suggestion = DidYouMean.formatter.message_for(corrections)
 
-      msg << suggestion if !msg.end_with?(suggestion)
+      msg << suggestion if !msg.include?(suggestion)
       msg
     rescue
       super
@@ -10553,6 +10600,7 @@ end
 
 require_relative "../spell_checker"
 require_relative "../tree_spell_checker"
+require "rbconfig"
 
 module DidYouMean
   class RequirePathChecker
@@ -12872,7 +12920,7 @@ class Gem::RequestSet
     @prerelease = options[:prerelease]
 
     requests = []
-    download_queue = Queue.new
+    download_queue = Thread::Queue.new
 
     # Create a thread-safe list of gems to download
     sorted_requests.each do |req|
@@ -13486,6 +13534,163 @@ end
 #
 # - Akinori MUSHA <<knu@iDaemons.org>> (current maintainer)
 #
+# ## What's Here
+#
+#  First, what's elsewhere. \Class \Set:
+#
+# - Inherits from {class Object}[https://docs.ruby-lang.org/en/master/Object.html#class-Object-label-What-27s+Here].
+# - Includes {module Enumerable}[https://docs.ruby-lang.org/en/master/Enumerable.html#module-Enumerable-label-What-27s+Here],
+#   which provides dozens of additional methods.
+#
+# In particular, class \Set does not have many methods of its own
+# for fetching or for iterating.
+# Instead, it relies on those in \Enumerable.
+#
+# Here, class \Set provides methods that are useful for:
+#
+# - [Creating a Set](#class-Set-label-Methods+for+Creating+a+Set)
+# - [Set Operations](#class-Set-label-Methods+for+Set+Operations)
+# - [Comparing](#class-Set-label-Methods+for+Comparing)
+# - [Querying](#class-Set-label-Methods+for+Querying)
+# - [Assigning](#class-Set-label-Methods+for+Assigning)
+# - [Deleting](#class-Set-label-Methods+for+Deleting)
+# - [Converting](#class-Set-label-Methods+for+Converting)
+# - [Iterating](#class-Set-label-Methods+for+Iterating)
+# - [And more....](#class-Set-label-Other+Methods)
+#
+# ### Methods for Creating a \Set
+#
+# - ::[] -
+#   Returns a new set containing the given objects.
+# - ::new -
+#   Returns a new set containing either the given objects
+#   (if no block given) or the return values from the called block
+#   (if a block given).
+#
+# ### Methods for \Set Operations
+#
+# - [|](#method-i-7C) (aliased as #union and #+) -
+#   Returns a new set containing all elements from +self+
+#   and all elements from a given enumerable (no duplicates).
+# - [&](#method-i-26) (aliased as #intersection) -
+#   Returns a new set containing all elements common to +self+
+#   and a given enumerable.
+# - [-](#method-i-2D) (aliased as #difference) -
+#   Returns a copy of +self+ with all elements
+#   in a given enumerable removed.
+# - [\^](#method-i-5E) -
+#   Returns a new set containing all elements from +self+
+#   and a given enumerable except those common to both.
+#
+# ### Methods for Comparing
+#
+# - [<=>](#method-i-3C-3D-3E) -
+#   Returns -1, 0, or 1 as +self+ is less than, equal to,
+#   or greater than a given object.
+# - [==](#method-i-3D-3D) -
+#   Returns whether +self+ and a given enumerable are equal,
+#   as determined by Object#eql?.
+# - \#compare_by_identity? -
+#   Returns whether the set considers only identity
+#   when comparing elements.
+#
+# ### Methods for Querying
+#
+# - \#length (aliased as #size) -
+#   Returns the count of elements.
+# - \#empty? -
+#   Returns whether the set has no elements.
+# - \#include? (aliased as #member? and #===) -
+#   Returns whether a given object is an element in the set.
+# - \#subset? (aliased as [<=](#method-i-3C-3D)) -
+#   Returns whether a given object is a subset of the set.
+# - \#proper_subset? (aliased as [<](#method-i-3C)) -
+#   Returns whether a given enumerable is a proper subset of the set.
+# - \#superset? (aliased as [<=](#method-i-3E-3D])) -
+#   Returns whether a given enumerable is a superset of the set.
+# - \#proper_superset? (aliased as [>](#method-i-3E)) -
+#   Returns whether a given enumerable is a proper superset of the set.
+# - \#disjoint? -
+#   Returns +true+ if the set and a given enumerable
+#   have no common elements, +false+ otherwise.
+# - \#intersect? -
+#   Returns +true+ if the set and a given enumerable -
+#   have any common elements, +false+ otherwise.
+# - \#compare_by_identity? -
+#   Returns whether the set considers only identity
+#   when comparing elements.
+#
+# ### Methods for Assigning
+#
+# - \#add (aliased as #<<) -
+#   Adds a given object to the set; returns +self+.
+# - \#add? -
+#   If the given object is not an element in the set,
+#   adds it and returns +self+; otherwise, returns +nil+.
+# - \#merge -
+#   Adds each given object to the set; returns +self+.
+# - \#replace -
+#   Replaces the contents of the set with the contents
+#   of a given enumerable.
+#
+# ### Methods for Deleting
+#
+# - \#clear -
+#   Removes all elements in the set; returns +self+.
+# - \#delete -
+#   Removes a given object from the set; returns +self+.
+# - \#delete? -
+#   If the given object is an element in the set,
+#   removes it and returns +self+; otherwise, returns +nil+.
+# - \#subtract -
+#   Removes each given object from the set; returns +self+.
+# - \#delete_if - Removes elements specified by a given block.
+# - \#select! (aliased as #filter!) -
+#   Removes elements not specified by a given block.
+# - \#keep_if -
+#   Removes elements not specified by a given block.
+# - \#reject!
+#   Removes elements specified by a given block.
+#
+# ### Methods for Converting
+#
+# - \#classify -
+#   Returns a hash that classifies the elements,
+#   as determined by the given block.
+# - \#collect! (aliased as #map!) -
+#   Replaces each element with a block return-value.
+# - \#divide -
+#   Returns a hash that classifies the elements,
+#   as determined by the given block;
+#   differs from #classify in that the block may accept
+#   either one or two arguments.
+# - \#flatten -
+#   Returns a new set that is a recursive flattening of +self+.
+#  \#flatten! -
+#   Replaces each nested set in +self+ with the elements from that set.
+# - \#inspect (aliased as #to_s) -
+#   Returns a string displaying the elements.
+# - \#join -
+#   Returns a string containing all elements, converted to strings
+#   as needed, and joined by the given record separator.
+# - \#to_a -
+#   Returns an array containing all set elements.
+# - \#to_set -
+#   Returns +self+ if given no arguments and no block;
+#   with a block given, returns a new set consisting of block
+#   return values.
+#
+# ### Methods for Iterating
+#
+# - \#each -
+#   Calls the block with each successive element; returns +self+.
+#
+# ### Other Methods
+#
+# - \#reset -
+#   Resets the internal state; useful if an object
+#   has been modified while an element in the set.
+#
 class Set
   include Enumerable
 
@@ -13737,25 +13942,35 @@ class Set
     end
   end
 
-  # Returns true if the set and the given set have at least one
+  # Returns true if the set and the given enumerable have at least one
   # element in common.
   #
   #     Set[1, 2, 3].intersect? Set[4, 5]   #=> false
   #     Set[1, 2, 3].intersect? Set[3, 4]   #=> true
+  #     Set[1, 2, 3].intersect? 4..5        #=> false
+  #     Set[1, 2, 3].intersect? [3, 4]      #=> true
   def intersect?(set)
-    set.is_a?(Set) or raise ArgumentError, "value must be a set"
-    if size < set.size
-      any? { |o| set.include?(o) }
-    else
+    case set
+    when Set
+      if size < set.size
+        any? { |o| set.include?(o) }
+      else
+        set.any? { |o| include?(o) }
+      end
+    when Enumerable
       set.any? { |o| include?(o) }
+    else
+      raise ArgumentError, "value must be enumerable"
     end
   end
 
-  # Returns true if the set and the given set have no element in
-  # common.  This method is the opposite of `intersect?`.
+  # Returns true if the set and the given enumerable have
+  # no element in common.  This method is the opposite of `intersect?`.
   #
   #     Set[1, 2, 3].disjoint? Set[3, 4]   #=> false
   #     Set[1, 2, 3].disjoint? Set[4, 5]   #=> true
+  #     Set[1, 2, 3].disjoint? [3, 4]      #=> false
+  #     Set[1, 2, 3].disjoint? 4..5        #=> true
   def disjoint?(set)
     !intersect?(set)
   end
@@ -15090,7 +15305,7 @@ end
 # frozen_string_literal: true
 
 module Gem::Resolver::Molinillo
-  # Provides information about specifcations and dependencies to the resolver,
+  # Provides information about specifications and dependencies to the resolver,
   # allowing the {Resolver} class to remain generic while still providing power
   # and flexibility.
   #
@@ -18925,7 +19140,7 @@ module URI
     # See also URI::Parser.initialize_regexp.
     attr_reader :regexp
 
-    # Returns a split URI against regexp[:ABS_URI].
+    # Returns a split URI against +regexp[:ABS_URI]+.
     def split(uri)
       case uri
       when ''
@@ -19066,8 +19281,8 @@ module URI
       end
     end
 
-    # Returns Regexp that is default self.regexp[:ABS_URI_REF],
-    # unless +schemes+ is provided. Then it is a Regexp.union with self.pattern[:X_ABS_URI].
+    # Returns Regexp that is default +self.regexp[:ABS_URI_REF]+,
+    # unless +schemes+ is provided. Then it is a Regexp.union with +self.pattern[:X_ABS_URI]+.
     def make_regexp(schemes = nil)
       unless schemes
         @regexp[:ABS_URI_REF]
@@ -19086,7 +19301,7 @@ module URI
     # +str+::
     #    String to make safe
     # +unsafe+::
-    #    Regexp to apply. Defaults to self.regexp[:UNSAFE]
+    #    Regexp to apply. Defaults to +self.regexp[:UNSAFE]+
     #
     # == Description
     #
@@ -19118,7 +19333,7 @@ module URI
     # +str+::
     #    String to remove escapes from
     # +escaped+::
-    #    Regexp to apply. Defaults to self.regexp[:ESCAPED]
+    #    Regexp to apply. Defaults to +self.regexp[:ESCAPED]+
     #
     # == Description
     #
@@ -19131,8 +19346,14 @@ module URI
     end
 
     @@to_s = Kernel.instance_method(:to_s)
-    def inspect
-      @@to_s.bind_call(self)
+    if @@to_s.respond_to?(:bind_call)
+      def inspect
+        @@to_s.bind_call(self)
+      end
+    else
+      def inspect
+        @@to_s.bind(self).call
+      end
     end
 
     private
@@ -19421,8 +19642,14 @@ module URI
     end
 
     @@to_s = Kernel.instance_method(:to_s)
-    def inspect
-      @@to_s.bind_call(self)
+    if @@to_s.respond_to?(:bind_call)
+      def inspect
+        @@to_s.bind_call(self)
+      end
+    else
+      def inspect
+        @@to_s.bind(self).call
+      end
     end
 
     private
@@ -19472,6 +19699,7 @@ module URI
   REGEXP = RFC2396_REGEXP
   Parser = RFC2396_Parser
   RFC3986_PARSER = RFC3986_Parser.new
+  Ractor.make_shareable(RFC3986_PARSER) if defined?(Ractor)
 
   # URI::Parser.new
   DEFAULT_PARSER = Parser.new
@@ -19483,6 +19711,7 @@ module URI
   DEFAULT_PARSER.regexp.each_pair do |sym, str|
     const_set(sym, str)
   end
+  Ractor.make_shareable(DEFAULT_PARSER) if defined?(Ractor)
 
   module Util # :nodoc:
     def make_components_hash(klass, array_hash)
@@ -19518,22 +19747,37 @@ module URI
 
   include REGEXP
 
-  @@schemes = {}
+  module Schemes
+  end
+  private_constant :Schemes
+
+  def self.register_scheme(scheme, klass)
+    Schemes.const_set(scheme, klass)
+  end
+
   # Returns a Hash of the defined schemes.
   def self.scheme_list
-    @@schemes
+    Schemes.constants.map { |name|
+      [name.to_s.upcase, Schemes.const_get(name)]
+    }.to_h
   end
+
+  INITIAL_SCHEMES = scheme_list
+  private_constant :INITIAL_SCHEMES
+  Ractor.make_shareable(INITIAL_SCHEMES) if defined?(Ractor)
 
   #
   # Construct a URI instance, using the scheme to detect the appropriate class
   # from +URI.scheme_list+.
   #
   def self.for(scheme, *arguments, default: Generic)
-    if scheme
-      uri_class = @@schemes[scheme.upcase] || default
-    else
-      uri_class = default
+    const_name = scheme.to_s.upcase
+
+    uri_class = INITIAL_SCHEMES[const_name]
+    uri_class ||= if /\A[A-Z]\w*\z/.match?(const_name) && Schemes.const_defined?(const_name, false)
+      Schemes.const_get(const_name, false)
     end
+    uri_class ||= default
 
     return uri_class.new(scheme, *arguments)
   end
@@ -19777,7 +20021,7 @@ module URI
   #
   # See URI.encode_www_form_component, URI.decode_www_form.
   def self.decode_www_form_component(str, enc=Encoding::UTF_8)
-    raise ArgumentError, "invalid %-encoding (#{str})" if /%(?!\h\h)/ =~ str
+    raise ArgumentError, "invalid %-encoding (#{str})" if /%(?!\h\h)/.match?(str)
     str.b.gsub(/\+|%\h\h/, TBLDECWWWCOMP_).force_encoding(enc)
   end
 
@@ -20109,6 +20353,7 @@ module URI
     "utf-16"=>"utf-16le",
     "utf-16le"=>"utf-16le",
   } # :nodoc:
+  Ractor.make_shareable(WEB_ENCODINGS_) if defined?(Ractor)
 
   # :nodoc:
   # return encoding or nil
@@ -20780,7 +21025,7 @@ module URI
     #
     def hostname
       v = self.host
-      /\A\[(.*)\]\z/ =~ v ? $1 : v
+      v&.start_with?('[') && v.end_with?(']') ? v[1..-2] : v
     end
 
     # Sets the host part of the URI as the argument with brackets for IPv6 addresses.
@@ -20796,7 +21041,7 @@ module URI
     # it is wrapped with brackets.
     #
     def hostname=(v)
-      v = "[#{v}]" if /\A\[.*\]\z/ !~ v && /:/ =~ v
+      v = "[#{v}]" if !(v&.start_with?('[') && v&.end_with?(']')) && v&.index(':')
       self.host = v
     end
 
@@ -21651,9 +21896,19 @@ module URI
           proxy_uri = env["CGI_#{name.upcase}"]
         end
       elsif name == 'http_proxy'
-        unless proxy_uri = env[name]
-          if proxy_uri = env[name.upcase]
-            warn 'The environment variable HTTP_PROXY is discouraged.  Use http_proxy.', uplevel: 1
+        if RUBY_ENGINE == 'jruby' && p_addr = ENV_JAVA['http.proxyHost']
+          p_port = ENV_JAVA['http.proxyPort']
+          if p_user = ENV_JAVA['http.proxyUser']
+            p_pass = ENV_JAVA['http.proxyPass']
+            proxy_uri = "http://#{p_user}:#{p_pass}@#{p_addr}:#{p_port}"
+          else
+            proxy_uri = "http://#{p_addr}:#{p_port}"
+          end
+        else
+          unless proxy_uri = env[name]
+            if proxy_uri = env[name.upcase]
+              warn 'The environment variable HTTP_PROXY is discouraged.  Use http_proxy.', uplevel: 1
+            end
           end
         end
       else
@@ -21794,7 +22049,7 @@ module URI
     end
   end
 
-  @@schemes['FILE'] = File
+  register_scheme 'FILE', File
 end
 # frozen_string_literal: false
 # = uri/ftp.rb
@@ -22060,7 +22315,8 @@ module URI
       return str
     end
   end
-  @@schemes['FTP'] = FTP
+
+  register_scheme 'FTP', FTP
 end
 # frozen_string_literal: false
 # = uri/http.rb
@@ -22146,8 +22402,7 @@ module URI
     end
   end
 
-  @@schemes['HTTP'] = HTTP
-
+  register_scheme 'HTTP', HTTP
 end
 # frozen_string_literal: false
 # = uri/https.rb
@@ -22169,7 +22424,8 @@ module URI
     # A Default port of 443 for URI::HTTPS
     DEFAULT_PORT = 443
   end
-  @@schemes['HTTPS'] = HTTPS
+
+  register_scheme 'HTTPS', HTTPS
 end
 # frozen_string_literal: false
 # = uri/ldap.rb
@@ -22430,7 +22686,7 @@ module URI
     end
   end
 
-  @@schemes['LDAP'] = LDAP
+  register_scheme 'LDAP', LDAP
 end
 # frozen_string_literal: false
 # = uri/ldap.rb
@@ -22451,7 +22707,8 @@ module URI
     # A Default port of 636 for URI::LDAPS
     DEFAULT_PORT = 636
   end
-  @@schemes['LDAPS'] = LDAPS
+
+  register_scheme 'LDAPS', LDAPS
 end
 # frozen_string_literal: false
 # = uri/mailto.rb
@@ -22744,7 +23001,7 @@ module URI
     alias to_rfc822text to_mailtext
   end
 
-  @@schemes['MAILTO'] = MailTo
+  register_scheme 'MAILTO', MailTo
 end
 # frozen_string_literal: false
 # URI is a module providing classes to handle Uniform Resource Identifiers
@@ -22778,7 +23035,7 @@ end
 #     class RSYNC < Generic
 #       DEFAULT_PORT = 873
 #     end
-#     @@schemes['RSYNC'] = RSYNC
+#     register_scheme 'RSYNC', RSYNC
 #   end
 #   #=> URI::RSYNC
 #
@@ -22818,7 +23075,6 @@ end
 # - URI::REGEXP - (in uri/common.rb)
 #   - URI::REGEXP::PATTERN - (in uri/common.rb)
 # - URI::Util - (in uri/common.rb)
-# - URI::Escape - (in uri/common.rb)
 # - URI::Error - (in uri/common.rb)
 #   - URI::InvalidURIError - (in uri/common.rb)
 #   - URI::InvalidComponentError - (in uri/common.rb)
@@ -22849,6 +23105,7 @@ require_relative 'uri/https'
 require_relative 'uri/ldap'
 require_relative 'uri/ldaps'
 require_relative 'uri/mailto'
+require_relative 'uri/ws'
 # frozen_string_literal: true
 
 ##
@@ -23686,6 +23943,7 @@ module Timeout
     def self.catch(*args)
       exc = new(*args)
       exc.instance_variable_set(:@thread, Thread.current)
+      exc.instance_variable_set(:@catch_value, exc)
       ::Kernel.catch(exc) {yield exc}
     end
 
@@ -23694,11 +23952,11 @@ module Timeout
       if self.thread == Thread.current
         bt = caller
         begin
-          throw(self, bt)
+          throw(@catch_value, bt)
         rescue UncaughtThrowError
         end
       end
-      self
+      super
     end
   end
 
@@ -23727,12 +23985,21 @@ module Timeout
   # ensure to prevent the handling of the exception.  For that reason, this
   # method cannot be relied on to enforce timeouts for untrusted blocks.
   #
+  # If a scheduler is defined, it will be used to handle the timeout by invoking
+  # Scheduler#timeout_after.
+  #
   # Note that this is both a method of module Timeout, so you can <tt>include
   # Timeout</tt> into your classes so they have a #timeout method, as well as
   # a module method, so you can call it directly as Timeout.timeout().
-  def timeout(sec, klass = nil, message = nil)   #:yield: +sec+
+  def timeout(sec, klass = nil, message = nil, &block)   #:yield: +sec+
     return yield(sec) if sec == nil or sec.zero?
+
     message ||= "execution expired".freeze
+
+    if Fiber.respond_to?(:current_scheduler) && (scheduler = Fiber.current_scheduler)&.respond_to?(:timeout_after)
+      return scheduler.timeout_after(sec, klass || Error, message, &block)
+    end
+
     from = "from #{caller_locations(1, 1)[0]}" if $DEBUG
     e = Error
     bl = proc do |exception|
@@ -23760,6 +24027,7 @@ module Timeout
       begin
         bl.call(klass)
       rescue klass => e
+        message = e.message
         bt = e.backtrace
       end
     else
@@ -23868,7 +24136,7 @@ end
 #     def_delegators :@q, :clear, :first, :push, :shift, :size
 #   end
 #
-#   q = Queue.new
+#   q = Thread::Queue.new
 #   q.enq 1, 2, 3, 4, 5
 #   q.push 6
 #
@@ -24110,7 +24378,7 @@ module SingleForwardable
   alias def_delegator def_single_delegator
 end
 module Reline
-  VERSION = '0.2.4'
+  VERSION = '0.2.6'
 end
 class Reline::Config
   attr_reader :test_mode
@@ -24161,7 +24429,9 @@ class Reline::Config
 
   def initialize
     @additional_key_bindings = {} # from inputrc
-    @default_key_bindings = {} # environment-dependent
+    @additional_key_bindings[:emacs] = {}
+    @additional_key_bindings[:vi_insert] = {}
+    @additional_key_bindings[:vi_command] = {}
     @skip_section = nil
     @if_stack = nil
     @editing_mode_label = :emacs
@@ -24183,8 +24453,10 @@ class Reline::Config
     if editing_mode_is?(:vi_command)
       @editing_mode_label = :vi_insert
     end
-    @additional_key_bindings = {}
-    @default_key_bindings = {}
+    @additional_key_bindings.keys.each do |key|
+      @additional_key_bindings[key].clear
+    end
+    reset_default_key_bindings
   end
 
   def editing_mode
@@ -24249,19 +24521,35 @@ class Reline::Config
   end
 
   def key_bindings
-    # override @default_key_bindings with @additional_key_bindings
-    @default_key_bindings.merge(@additional_key_bindings)
+    # override @key_actors[@editing_mode_label].default_key_bindings with @additional_key_bindings[@editing_mode_label]
+    @key_actors[@editing_mode_label].default_key_bindings.merge(@additional_key_bindings[@editing_mode_label])
+  end
+
+  def add_default_key_binding_by_keymap(keymap, keystroke, target)
+    @key_actors[keymap].default_key_bindings[keystroke] = target
   end
 
   def add_default_key_binding(keystroke, target)
-    @default_key_bindings[keystroke] = target
+    @key_actors[@keymap_label].default_key_bindings[keystroke] = target
   end
 
   def reset_default_key_bindings
-    @default_key_bindings = {}
+    @key_actors.values.each do |ka|
+      ka.reset_default_key_bindings
+    end
   end
 
   def read_lines(lines, file = nil)
+    if not lines.empty? and lines.first.encoding != Reline.encoding_system_needs
+      begin
+        lines = lines.map do |l|
+          l.encode(Reline.encoding_system_needs)
+        rescue Encoding::UndefinedConversionError
+          mes = "The inputrc encoded in #{lines.first.encoding.name} can't be converted to the locale #{Reline.encoding_system_needs.name}."
+          raise Reline::ConfigEncodingConversionError.new(mes)
+        end
+      end
+    end
     conditions = [@skip_section, @if_stack]
     @skip_section = nil
     @if_stack = []
@@ -24288,7 +24576,7 @@ class Reline::Config
         key, func_name = $1, $2
         keystroke, func = bind_key(key, func_name)
         next unless keystroke
-        @additional_key_bindings[keystroke] = func
+        @additional_key_bindings[@keymap_label][keystroke] = func
       end
     end
     unless @if_stack.empty?
@@ -24396,11 +24684,8 @@ class Reline::Config
   end
 
   def retrieve_string(str)
-    if str =~ /\A"(.*)"\z/
-      parse_keyseq($1).map(&:chr).join
-    else
-      parse_keyseq(str).map(&:chr).join
-    end
+    str = $1 if str =~ /\A"(.*)"\z/
+    parse_keyseq(str).map { |c| c.chr(Reline.encoding_system_needs) }.join
   end
 
   def bind_key(key, func_name)
@@ -24464,6 +24749,18 @@ class Reline::KeyActor::Base
 
   def get_method(key)
     self.class::MAPPING[key]
+  end
+
+  def initialize
+    @default_key_bindings = {}
+  end
+
+  def default_key_bindings
+    @default_key_bindings
+  end
+
+  def reset_default_key_bindings
+    @default_key_bindings.clear
   end
 end
 class Reline::KeyActor::Emacs < Reline::KeyActor::Base
@@ -30319,7 +30616,7 @@ class Dir
       Dir.tmpdir
     end
 
-    UNUSABLE_CHARS = [File::SEPARATOR, File::ALT_SEPARATOR, File::PATH_SEPARATOR, ":"].uniq.join("").freeze
+    UNUSABLE_CHARS = "^,-.0-9A-Z_a-z~"
 
     class << (RANDOM = Random.new)
       MAX = 36**6 # < 0x100000000
@@ -30884,7 +31181,7 @@ class Reline::LineEditor
     @screen_size = Reline::IOGate.get_screen_size
     @screen_height = @screen_size.first
     reset_variables(prompt, encoding: encoding)
-    @old_trap = Signal.trap('SIGINT') {
+    @old_trap = Signal.trap(:INT) {
       if @scroll_partial_screen
         move_cursor_down(@screen_height - (@line_index - @scroll_partial_screen) - 1)
       else
@@ -30892,8 +31189,16 @@ class Reline::LineEditor
       end
       Reline::IOGate.move_cursor_column(0)
       scroll_down(1)
-      @old_trap.call if @old_trap.respond_to?(:call) # can also be string, ex: "DEFAULT"
-      raise Interrupt
+      case @old_trap
+      when 'DEFAULT', 'SYSTEM_DEFAULT'
+        raise Interrupt
+      when 'IGNORE'
+        # Do nothing
+      when 'EXIT'
+        exit
+      else
+        @old_trap.call
+      end
     }
     Reline::IOGate.set_winch_handler do
       @rest_height = (Reline::IOGate.get_screen_size.first - 1) - Reline::IOGate.cursor_pos.y
@@ -31143,7 +31448,6 @@ class Reline::LineEditor
       return
     end
     new_highest_in_this = calculate_height_by_width(prompt_width + calculate_width(@line.nil? ? '' : @line))
-    # FIXME: end of logical line sometimes breaks
     rendered = false
     if @add_newline_to_end_of_buffer
       rerender_added_newline(prompt, prompt_width)
@@ -31412,7 +31716,6 @@ class Reline::LineEditor
   private def render_partial(prompt, prompt_width, line_to_render, this_started_from, with_control: true)
     visual_lines, height = split_by_width(line_to_render.nil? ? prompt : prompt + line_to_render, @screen_size.last)
     cursor_up_from_last_line = 0
-    # TODO: This logic would be sometimes buggy if this logical line isn't the current @line_index.
     if @scroll_partial_screen
       last_visual_line = this_started_from + (height - 1)
       last_screen_line = @scroll_partial_screen + (@screen_height - 1)
@@ -31547,6 +31850,7 @@ class Reline::LineEditor
     end
     move_cursor_up(back)
     move_cursor_down(@first_line_started_from + @started_from)
+    @rest_height = (Reline::IOGate.get_screen_size.first - 1) - Reline::IOGate.cursor_pos.y
     Reline::IOGate.move_cursor_column((prompt_width + @cursor) % @screen_size.last)
   end
 
@@ -31892,8 +32196,25 @@ class Reline::LineEditor
 
   def call_completion_proc
     result = retrieve_completion_block(true)
-    slice = result[1]
-    result = @completion_proc.(slice) if @completion_proc and slice
+    preposing, target, postposing = result
+    if @completion_proc and target
+      argnum = @completion_proc.parameters.inject(0) { |result, item|
+        case item.first
+        when :req, :opt
+          result + 1
+        when :rest
+          break 3
+        end
+      }
+      case argnum
+      when 1
+        result = @completion_proc.(target)
+      when 2
+        result = @completion_proc.(target, preposing)
+      when 3..Float::INFINITY
+        result = @completion_proc.(target, preposing, postposing)
+      end
+    end
     Reline.core.instance_variable_set(:@completion_quote_character, nil)
     result
   end
@@ -31941,8 +32262,16 @@ class Reline::LineEditor
   end
 
   def retrieve_completion_block(set_completion_quote_character = false)
-    word_break_regexp = /\A[#{Regexp.escape(Reline.completer_word_break_characters)}]/
-    quote_characters_regexp = /\A[#{Regexp.escape(Reline.completer_quote_characters)}]/
+    if Reline.completer_word_break_characters.empty?
+      word_break_regexp = nil
+    else
+      word_break_regexp = /\A[#{Regexp.escape(Reline.completer_word_break_characters)}]/
+    end
+    if Reline.completer_quote_characters.empty?
+      quote_characters_regexp = nil
+    else
+      quote_characters_regexp = /\A[#{Regexp.escape(Reline.completer_quote_characters)}]/
+    end
     before = @line.byteslice(0, @byte_pointer)
     rest = nil
     break_pointer = nil
@@ -31963,14 +32292,14 @@ class Reline::LineEditor
       elsif quote and slice.start_with?(escaped_quote)
         # skip
         i += 2
-      elsif slice =~ quote_characters_regexp # find new "
+      elsif quote_characters_regexp and slice =~ quote_characters_regexp # find new "
         rest = $'
         quote = $&
         closing_quote = /(?!\\)#{Regexp.escape(quote)}/
         escaped_quote = /\\#{Regexp.escape(quote)}/
         i += 1
         break_pointer = i - 1
-      elsif not quote and slice =~ word_break_regexp
+      elsif word_break_regexp and not quote and slice =~ word_break_regexp
         rest = $'
         i += 1
         before = @line.byteslice(i, @byte_pointer - i)
@@ -31997,6 +32326,19 @@ class Reline::LineEditor
         preposing = ''
       end
       target = before
+    end
+    if @is_multiline
+      if @previous_line_index
+        lines = whole_lines(index: @previous_line_index, line: @line)
+      else
+        lines = whole_lines
+      end
+      if @line_index > 0
+        preposing = lines[0..(@line_index - 1)].join("\n") + "\n" + preposing
+      end
+      if (lines.size - 1) > @line_index
+        postposing = postposing + "\n" + lines[(@line_index + 1)..-1].join("\n")
+      end
     end
     [preposing.encode(@encoding), target.encode(@encoding), postposing.encode(@encoding)]
   end
@@ -32025,10 +32367,32 @@ class Reline::LineEditor
 
   def delete_text(start = nil, length = nil)
     if start.nil? and length.nil?
-      @line&.clear
-      @byte_pointer = 0
-      @cursor = 0
-      @cursor_max = 0
+      if @is_multiline
+        if @buffer_of_lines.size == 1
+          @line&.clear
+          @byte_pointer = 0
+          @cursor = 0
+          @cursor_max = 0
+        elsif @line_index == (@buffer_of_lines.size - 1) and @line_index > 0
+          @buffer_of_lines.pop
+          @line_index -= 1
+          @line = @buffer_of_lines[@line_index]
+          @byte_pointer = 0
+          @cursor = 0
+          @cursor_max = calculate_width(@line)
+        elsif @line_index < (@buffer_of_lines.size - 1)
+          @buffer_of_lines.delete_at(@line_index)
+          @line = @buffer_of_lines[@line_index]
+          @byte_pointer = 0
+          @cursor = 0
+          @cursor_max = calculate_width(@line)
+        end
+      else
+        @line&.clear
+        @byte_pointer = 0
+        @cursor = 0
+        @cursor_max = 0
+      end
     elsif not start.nil? and not length.nil?
       if @line
         before = @line.byteslice(0, start)
@@ -33529,9 +33893,15 @@ class Reline::History < Array
   end
 end
 require 'io/console'
+require 'io/wait'
 require 'timeout'
+require_relative 'terminfo'
 
 class Reline::ANSI
+  if Reline::Terminfo.enabled?
+    Reline::Terminfo.setupterm(0, 2)
+  end
+
   def self.encoding
     Encoding.default_external
   end
@@ -33540,52 +33910,99 @@ class Reline::ANSI
     false
   end
 
-  RAW_KEYSTROKE_CONFIG = {
-    # Console (80x25)
-    [27, 91, 49, 126] => :ed_move_to_beg, # Home
-    [27, 91, 52, 126] => :ed_move_to_end, # End
-    [27, 91, 51, 126] => :key_delete,     # Del
-    [27, 91, 65] => :ed_prev_history,     # ↑
-    [27, 91, 66] => :ed_next_history,     # ↓
-    [27, 91, 67] => :ed_next_char,        # →
-    [27, 91, 68] => :ed_prev_char,        # ←
+  def self.set_default_key_bindings(config)
+    if Reline::Terminfo.enabled?
+      set_default_key_bindings_terminfo(config)
+    else
+      set_default_key_bindings_comprehensive_list(config)
+    end
+    {
+      # extended entries of terminfo
+      [27, 91, 49, 59, 53, 67] => :em_next_word, # Ctrl+→, extended entry
+      [27, 91, 49, 59, 53, 68] => :ed_prev_word, # Ctrl+←, extended entry
+      [27, 91, 49, 59, 51, 67] => :em_next_word, # Meta+→, extended entry
+      [27, 91, 49, 59, 51, 68] => :ed_prev_word, # Meta+←, extended entry
+    }.each_pair do |key, func|
+      config.add_default_key_binding_by_keymap(:emacs, key, func)
+      config.add_default_key_binding_by_keymap(:vi_insert, key, func)
+      config.add_default_key_binding_by_keymap(:vi_command, key, func)
+    end
+    {
+      # default bindings
+      [27, 32] => :em_set_mark,             # M-<space>
+      [24, 24] => :em_exchange_mark,        # C-x C-x
+    }.each_pair do |key, func|
+      config.add_default_key_binding_by_keymap(:emacs, key, func)
+    end
+  end
 
-    # KDE
-    [27, 91, 72] => :ed_move_to_beg,      # Home
-    [27, 91, 70] => :ed_move_to_end,      # End
-    # Del is 0x08
-    [27, 71, 65] => :ed_prev_history,     # ↑
-    [27, 71, 66] => :ed_next_history,     # ↓
-    [27, 71, 67] => :ed_next_char,        # →
-    [27, 71, 68] => :ed_prev_char,        # ←
+  def self.set_default_key_bindings_terminfo(config)
+    {
+      Reline::Terminfo.tigetstr('khome').bytes => :ed_move_to_beg,
+      Reline::Terminfo.tigetstr('kend').bytes => :ed_move_to_end,
+      Reline::Terminfo.tigetstr('kcuu1').bytes => :ed_prev_history,
+      Reline::Terminfo.tigetstr('kcud1').bytes => :ed_next_history,
+      Reline::Terminfo.tigetstr('kcuf1').bytes => :ed_next_char,
+      Reline::Terminfo.tigetstr('kcub1').bytes => :ed_prev_char,
+      # Escape sequences that omit the move distance and are set to defaults
+      # value 1 may be sometimes sent by pressing the arrow-key.
+      Reline::Terminfo.tigetstr('cuu').sub(/%p1%d/, '').bytes => :ed_prev_history,
+      Reline::Terminfo.tigetstr('cud').sub(/%p1%d/, '').bytes => :ed_next_history,
+      Reline::Terminfo.tigetstr('cuf').sub(/%p1%d/, '').bytes => :ed_next_char,
+      Reline::Terminfo.tigetstr('cub').sub(/%p1%d/, '').bytes => :ed_prev_char,
+    }.each_pair do |key, func|
+      config.add_default_key_binding_by_keymap(:emacs, key, func)
+      config.add_default_key_binding_by_keymap(:vi_insert, key, func)
+      config.add_default_key_binding_by_keymap(:vi_command, key, func)
+    end
+  end
 
-    # urxvt / exoterm
-    [27, 91, 55, 126] => :ed_move_to_beg, # Home
-    [27, 91, 56, 126] => :ed_move_to_end, # End
+  def self.set_default_key_bindings_comprehensive_list(config)
+    {
+      # Console (80x25)
+      [27, 91, 49, 126] => :ed_move_to_beg, # Home
+      [27, 91, 52, 126] => :ed_move_to_end, # End
+      [27, 91, 51, 126] => :key_delete,     # Del
+      [27, 91, 65] => :ed_prev_history,     # ↑
+      [27, 91, 66] => :ed_next_history,     # ↓
+      [27, 91, 67] => :ed_next_char,        # →
+      [27, 91, 68] => :ed_prev_char,        # ←
 
-    # GNOME
-    [27, 79, 72] => :ed_move_to_beg,      # Home
-    [27, 79, 70] => :ed_move_to_end,      # End
-    # Del is 0x08
-    # Arrow keys are the same of KDE
+      # KDE
+      [27, 91, 72] => :ed_move_to_beg,      # Home
+      [27, 91, 70] => :ed_move_to_end,      # End
+      # Del is 0x08
+      [27, 71, 65] => :ed_prev_history,     # ↑
+      [27, 71, 66] => :ed_next_history,     # ↓
+      [27, 71, 67] => :ed_next_char,        # →
+      [27, 71, 68] => :ed_prev_char,        # ←
 
-    # iTerm2
-    [27, 27, 91, 67] => :em_next_word,    # Option+→
-    [27, 27, 91, 68] => :ed_prev_word,    # Option+←
-    [195, 166] => :em_next_word,          # Option+f
-    [195, 162] => :ed_prev_word,          # Option+b
+      # urxvt / exoterm
+      [27, 91, 55, 126] => :ed_move_to_beg, # Home
+      [27, 91, 56, 126] => :ed_move_to_end, # End
 
-    # others
-    [27, 32] => :em_set_mark,             # M-<space>
-    [24, 24] => :em_exchange_mark,        # C-x C-x TODO also add Windows
-    [27, 91, 49, 59, 53, 67] => :em_next_word, # Ctrl+→
-    [27, 91, 49, 59, 53, 68] => :ed_prev_word, # Ctrl+←
+      # GNOME
+      [27, 79, 72] => :ed_move_to_beg,      # Home
+      [27, 79, 70] => :ed_move_to_end,      # End
+      # Del is 0x08
+      # Arrow keys are the same of KDE
 
-    [27, 79, 65] => :ed_prev_history,     # ↑
-    [27, 79, 66] => :ed_next_history,     # ↓
-    [27, 79, 67] => :ed_next_char,        # →
-    [27, 79, 68] => :ed_prev_char,        # ←
-  }
+      # iTerm2
+      [27, 27, 91, 67] => :em_next_word,    # Option+→, extended entry
+      [27, 27, 91, 68] => :ed_prev_word,    # Option+←, extended entry
+      [195, 166] => :em_next_word,          # Option+f
+      [195, 162] => :ed_prev_word,          # Option+b
+
+      [27, 79, 65] => :ed_prev_history,     # ↑
+      [27, 79, 66] => :ed_next_history,     # ↓
+      [27, 79, 67] => :ed_next_char,        # →
+      [27, 79, 68] => :ed_prev_char,        # ←
+    }.each_pair do |key, func|
+      config.add_default_key_binding_by_keymap(:emacs, key, func)
+      config.add_default_key_binding_by_keymap(:vi_insert, key, func)
+      config.add_default_key_binding_by_keymap(:vi_command, key, func)
+    end
+  end
 
   @@input = STDIN
   def self.input=(val)
@@ -33608,6 +34025,8 @@ class Reline::ANSI
     (c == 0x16 && @@input.raw(min: 0, tim: 0, &:getbyte)) || c
   rescue Errno::EIO
     # Maybe the I/O has been closed.
+    nil
+  rescue Errno::ENOTTY
     nil
   end
 
@@ -33659,12 +34078,7 @@ class Reline::ANSI
     unless @@buf.empty?
       return false
     end
-    rs, = IO.select([@@input], [], [], 0.00001)
-    if rs and rs[0]
-      false
-    else
-      true
-    end
+    !@@input.wait_readable(0)
   end
 
   def self.ungetc(c)
@@ -33673,8 +34087,7 @@ class Reline::ANSI
 
   def self.retrieve_keybuffer
     begin
-      result = select([@@input], [], [], 0.001)
-      return if result.nil?
+      return unless @@input.wait_readable(0.001)
       str = @@input.read_nonblock(1024)
       str.bytes.each do |c|
         @@buf.push(c)
@@ -33790,19 +34203,27 @@ end
 require 'timeout'
 
 class Reline::GeneralIO
-  def self.reset
+  def self.reset(encoding: nil)
     @@pasting = false
+    @@encoding = encoding
   end
 
   def self.encoding
-    RUBY_PLATFORM =~ /mswin|mingw/ ? Encoding::UTF_8 : Encoding::default_external
+    if defined?(@@encoding)
+      @@encoding
+    elsif RUBY_PLATFORM =~ /mswin|mingw/
+      Encoding::UTF_8
+    else
+      Encoding::default_external
+    end
   end
 
   def self.win?
     false
   end
 
-  RAW_KEYSTROKE_CONFIG = {}
+  def self.set_default_key_bindings(_)
+  end
 
   @@buf = []
 
@@ -33889,11 +34310,14 @@ require 'reline/key_actor'
 require 'reline/key_stroke'
 require 'reline/line_editor'
 require 'reline/history'
+require 'reline/terminfo'
 require 'rbconfig'
 
 module Reline
   FILENAME_COMPLETION_PROC = nil
   USERNAME_COMPLETION_PROC = nil
+
+  class ConfigEncodingConversionError < StandardError; end
 
   Key = Struct.new('Key', :char, :combined_char, :with_meta)
   CursorPos = Struct.new(:x, :y)
@@ -34113,9 +34537,7 @@ module Reline
       unless config.test_mode
         config.read
         config.reset_default_key_bindings
-        Reline::IOGate::RAW_KEYSTROKE_CONFIG.each_pair do |key, func|
-          config.add_default_key_binding(key, func)
-        end
+        Reline::IOGate.set_default_key_bindings(config)
       end
 
       line_editor.rerender
@@ -34155,11 +34577,12 @@ module Reline
       Reline::IOGate.deprep(otio)
     end
 
-    # Keystrokes of GNU Readline will timeout it with the specification of
-    # "keyseq-timeout" when waiting for the 2nd character after the 1st one.
-    # If the 2nd character comes after 1st ESC without timeout it has a
-    # meta-property of meta-key to discriminate modified key with meta-key
-    # from multibyte characters that come with 8th bit on.
+    # GNU Readline waits for "keyseq-timeout" milliseconds to see if the ESC
+    # is followed by a character, and times out and treats it as a standalone
+    # ESC if the second character does not arrive. If the second character
+    # comes before timed out, it is treated as a modifier key with the
+    # meta-property of meta-key, so that it can be distinguished from
+    # multibyte characters with the 8th bit turned on.
     #
     # GNU Readline will wait for the 2nd character with "keyseq-timeout"
     # milli-seconds but wait forever after 3rd characters.
@@ -34328,25 +34751,37 @@ module Reline
     }
   end
 
+  def self.ungetc(c)
+    Reline::IOGate.ungetc(c)
+  end
+
   def self.line_editor
     core.line_editor
   end
 end
 
+require 'reline/general_io'
 if RbConfig::CONFIG['host_os'] =~ /mswin|msys|mingw|cygwin|bccwin|wince|emc/
   require 'reline/windows'
   if Reline::Windows.msys_tty?
-    require 'reline/ansi'
-    Reline::IOGate = Reline::ANSI
+    Reline::IOGate = if ENV['TERM'] == 'dumb'
+      Reline::GeneralIO
+    else
+      require 'reline/ansi'
+      Reline::ANSI
+    end
   else
     Reline::IOGate = Reline::Windows
   end
 else
-  require 'reline/ansi'
-  Reline::IOGate = Reline::ANSI
+  Reline::IOGate = if $stdout.isatty
+    require 'reline/ansi'
+    Reline::ANSI
+  else
+    Reline::GeneralIO
+  end
 end
 Reline::HISTORY = Reline::History.new(Reline.core.config)
-require 'reline/general_io'
 # frozen_string_literal: false
 #
 #   irb/init.rb - irb initialize module
@@ -34393,7 +34828,7 @@ module IRB # :nodoc:
     @CONF[:IRB_RC] = nil
 
     @CONF[:USE_SINGLELINE] = false unless defined?(ReadlineInputMethod)
-    @CONF[:USE_COLORIZE] = true
+    @CONF[:USE_COLORIZE] = !ENV['NO_COLOR']
     @CONF[:INSPECT_MODE] = true
     @CONF[:USE_TRACER] = false
     @CONF[:USE_LOADER] = false
@@ -34469,7 +34904,11 @@ module IRB # :nodoc:
       puts 'processing time: %fs' % (now - time) if IRB.conf[:MEASURE]
       result
     }
+    # arg can be either a symbol for the mode (:cpu, :wall, ..) or a hash for
+    # a more complete configuration.
+    # See https://github.com/tmm1/stackprof#all-options.
     @CONF[:MEASURE_PROC][:STACKPROF] = proc { |context, code, line_no, arg, &block|
+      return block.() unless IRB.conf[:MEASURE]
       success = false
       begin
         require 'stackprof'
@@ -34479,10 +34918,18 @@ module IRB # :nodoc:
       end
       if success
         result = nil
-        stackprof_result = StackProf.run(mode: arg ? arg : :cpu) do
+        arg = { mode: arg || :cpu } unless arg.is_a?(Hash)
+        stackprof_result = StackProf.run(**arg) do
           result = block.()
         end
-        StackProf::Report.new(stackprof_result).print_text if IRB.conf[:MEASURE]
+        case stackprof_result
+        when File
+          puts "StackProf report saved to #{stackprof_result.path}"
+        when Hash
+          StackProf::Report.new(stackprof_result).print_text
+        else
+          puts "Stackprof ran with #{arg.inspect}"
+        end
         result
       else
         block.()
@@ -34650,11 +35097,11 @@ module IRB # :nodoc:
         break
       end
     end
+
     load_path.collect! do |path|
       /\A\.\// =~ path ? path : File.expand_path(path)
     end
     $LOAD_PATH.unshift(*load_path)
-
   end
 
   # running config
@@ -35122,7 +35569,7 @@ end
 #       From Original Idea of shugo@ruby-lang.org
 #
 
-autoload :RDoc, "rdoc"
+require_relative 'ruby-lex'
 
 module IRB
   module InputCompletor # :nodoc:
@@ -35153,8 +35600,69 @@ module IRB
 
     BASIC_WORD_BREAK_CHARACTERS = " \t\n`><=;|&{("
 
-    CompletionProc = proc { |input|
-      retrieve_completion_data(input).compact.map{ |i| i.encode(Encoding.default_external) }
+    def self.retrieve_files_to_require_from_load_path
+      @@files_from_load_path ||= $LOAD_PATH.flat_map { |path|
+        begin
+          Dir.glob("**/*.{rb,#{RbConfig::CONFIG['DLEXT']}}", base: path)
+        rescue Errno::ENOENT
+          []
+        end
+      }.uniq.map { |path|
+        path.sub(/\.(rb|#{RbConfig::CONFIG['DLEXT']})\z/, '')
+      }
+    end
+
+    def self.retrieve_files_to_require_relative_from_current_dir
+      @@files_from_current_dir ||= Dir.glob("**/*.{rb,#{RbConfig::CONFIG['DLEXT']}}", base: '.').map { |path|
+        path.sub(/\.(rb|#{RbConfig::CONFIG['DLEXT']})\z/, '')
+      }
+    end
+
+    CompletionRequireProc = lambda { |target, preposing = nil, postposing = nil|
+      if target =~ /\A(['"])([^'"]+)\Z/
+        quote = $1
+        actual_target = $2
+      else
+        return nil # It's not String literal
+      end
+      tokens = RubyLex.ripper_lex_without_warning(preposing.gsub(/\s*\z/, ''))
+      tok = nil
+      tokens.reverse_each do |t|
+        unless [:on_lparen, :on_sp, :on_ignored_sp, :on_nl, :on_ignored_nl, :on_comment].include?(t.event)
+          tok = t
+          break
+        end
+      end
+      result = []
+      if tok && tok.event == :on_ident && tok.state == Ripper::EXPR_CMDARG
+        case tok.tok
+        when 'require'
+          result = retrieve_files_to_require_from_load_path.select { |path|
+            path.start_with?(actual_target)
+          }.map { |path|
+            quote + path
+          }
+        when 'require_relative'
+          result = retrieve_files_to_require_relative_from_current_dir.select { |path|
+            path.start_with?(actual_target)
+          }.map { |path|
+            quote + path
+          }
+        end
+      end
+      result
+    }
+
+    CompletionProc = lambda { |target, preposing = nil, postposing = nil|
+      if preposing && postposing
+        result = CompletionRequireProc.(target, preposing, postposing)
+        unless result
+          result = retrieve_completion_data(target).compact.map{ |i| i.encode(Encoding.default_external) }
+        end
+        result
+      else
+        retrieve_completion_data(target).compact.map{ |i| i.encode(Encoding.default_external) }
+      end
     }
 
     def self.retrieve_completion_data(input, bind: IRB.conf[:MAIN_CONTEXT].workspace.binding, doc_namespace: false)
@@ -35381,13 +35889,22 @@ module IRB
     end
 
     PerfectMatchedProc = ->(matched, bind: IRB.conf[:MAIN_CONTEXT].workspace.binding) {
+      begin
+        require 'rdoc'
+      rescue LoadError
+        return
+      end
+
       RDocRIDriver ||= RDoc::RI::Driver.new
+
       if matched =~ /\A(?:::)?RubyVM/ and not ENV['RUBY_YES_I_AM_NOT_A_NORMAL_USER']
         IRB.__send__(:easter_egg)
         return
       end
+
       namespace = retrieve_completion_data(matched, bind: bind, doc_namespace: true)
       return unless namespace
+
       if namespace.is_a?(Array)
         out = RDoc::Markup::Document.new
         namespace.each do |m|
@@ -35728,6 +36245,7 @@ module IRB
         Reline.basic_word_break_characters = IRB::InputCompletor::BASIC_WORD_BREAK_CHARACTERS
       end
       Reline.completion_append_character = nil
+      Reline.completer_quote_characters = ''
       Reline.completion_proc = IRB::InputCompletor::CompletionProc
       Reline.output_modifier_proc =
         if IRB.conf[:USE_COLORIZE]
@@ -36536,6 +37054,11 @@ module IRB # :nodoc:
       ],
 
       [
+        :irb_show_source, :ShowSource, "irb/cmd/show_source",
+        [:show_source, NO_OVERRIDE],
+      ],
+
+      [
         :irb_whereami, :Whereami, "irb/cmd/whereami",
         [:whereami, NO_OVERRIDE],
       ],
@@ -36781,29 +37304,48 @@ class RubyLex
     @prompt = nil
   end
 
-  def self.compile_with_errors_suppressed(code)
-    line_no = 1
+  def self.compile_with_errors_suppressed(code, line_no: 1)
     begin
       result = yield code, line_no
     rescue ArgumentError
+      # Ruby can issue an error for the code if there is an
+      # incomplete magic comment for encoding in it. Force an
+      # expression with a new line before the code in this
+      # case to prevent magic comment handling.  To make sure
+      # line numbers in the lexed code remain the same,
+      # decrease the line number by one.
       code = ";\n#{code}"
-      line_no = 0
+      line_no -= 1
       result = yield code, line_no
     end
     result
   end
 
   # io functions
-  def set_input(io, p = nil, &block)
+  def set_input(io, p = nil, context: nil, &block)
     @io = io
     if @io.respond_to?(:check_termination)
       @io.check_termination do |code|
-        code.gsub!(/\s*\z/, '').concat("\n")
-        ltype, indent, continue, code_block_open = check_state(code)
-        if ltype or indent > 0 or continue or code_block_open
-          false
+        if Reline::IOGate.in_pasting?
+          lex = RubyLex.new
+          rest = lex.check_termination_in_prev_line(code, context: context)
+          if rest
+            Reline.delete_text
+            rest.bytes.reverse_each do |c|
+              Reline.ungetc(c)
+            end
+            true
+          else
+            false
+          end
         else
-          true
+          code.gsub!(/\s*\z/, '').concat("\n")
+          ltype, indent, continue, code_block_open = check_state(code, context: context)
+          if ltype or indent > 0 or continue or code_block_open
+            false
+          else
+            true
+          end
         end
       end
     end
@@ -36811,7 +37353,7 @@ class RubyLex
       @io.dynamic_prompt do |lines|
         lines << '' if lines.empty?
         result = []
-        tokens = ripper_lex_without_warning(lines.map{ |l| l + "\n" }.join)
+        tokens = self.class.ripper_lex_without_warning(lines.map{ |l| l + "\n" }.join, context: context)
         code = String.new
         partial_tokens = []
         unprocessed_tokens = []
@@ -36823,7 +37365,7 @@ class RubyLex
             t_str = t[2]
             t_str.each_line("\n") do |s|
               code << s << "\n"
-              ltype, indent, continue, code_block_open = check_state(code, partial_tokens)
+              ltype, indent, continue, code_block_open = check_state(code, partial_tokens, context: context)
               result << @prompt.call(ltype, indent, continue || code_block_open, @line_no + line_num_offset)
               line_num_offset += 1
             end
@@ -36833,7 +37375,7 @@ class RubyLex
           end
         end
         unless unprocessed_tokens.empty?
-          ltype, indent, continue, code_block_open = check_state(code, unprocessed_tokens)
+          ltype, indent, continue, code_block_open = check_state(code, unprocessed_tokens, context: context)
           result << @prompt.call(ltype, indent, continue || code_block_open, @line_no + line_num_offset)
         end
         result
@@ -36866,15 +37408,25 @@ class RubyLex
     :on_param_error
   ]
 
-  def ripper_lex_without_warning(code)
+  def self.ripper_lex_without_warning(code, context: nil)
     verbose, $VERBOSE = $VERBOSE, nil
+    if context
+      lvars = context&.workspace&.binding&.local_variables
+      if lvars && !lvars.empty?
+        code = "#{lvars.join('=')}=nil\n#{code}"
+        line_no = 0
+      else
+        line_no = 1
+      end
+    end
     tokens = nil
-    self.class.compile_with_errors_suppressed(code) do |inner_code, line_no|
+    compile_with_errors_suppressed(code, line_no: line_no) do |inner_code, line_no|
       lexer = Ripper::Lexer.new(inner_code, '-', line_no)
       if lexer.respond_to?(:scan) # Ruby 2.7+
         tokens = []
         pos_to_index = {}
         lexer.scan.each do |t|
+          next if t.pos.first == 0
           if pos_to_index.has_key?(t[0])
             index = pos_to_index[t[0]]
             found_tk = tokens[index]
@@ -36919,7 +37471,7 @@ class RubyLex
     if @io.respond_to?(:auto_indent) and context.auto_indent_mode
       @io.auto_indent do |lines, line_index, byte_pointer, is_newline|
         if is_newline
-          @tokens = ripper_lex_without_warning(lines[0..line_index].join("\n"))
+          @tokens = self.class.ripper_lex_without_warning(lines[0..line_index].join("\n"), context: context)
           prev_spaces = find_prev_spaces(line_index)
           depth_difference = check_newline_depth_difference
           depth_difference = 0 if depth_difference < 0
@@ -36928,7 +37480,7 @@ class RubyLex
           code = line_index.zero? ? '' : lines[0..(line_index - 1)].map{ |l| l + "\n" }.join
           last_line = lines[line_index]&.byteslice(0, byte_pointer)
           code += last_line if last_line
-          @tokens = ripper_lex_without_warning(code)
+          @tokens = self.class.ripper_lex_without_warning(code, context: context)
           corresponding_token_depth = check_corresponding_token_depth
           if corresponding_token_depth
             corresponding_token_depth
@@ -36940,8 +37492,8 @@ class RubyLex
     end
   end
 
-  def check_state(code, tokens = nil)
-    tokens = ripper_lex_without_warning(code) unless tokens
+  def check_state(code, tokens = nil, context: nil)
+    tokens = self.class.ripper_lex_without_warning(code, context: context) unless tokens
     ltype = process_literal_type(tokens)
     indent = process_nesting_level(tokens)
     continue = process_continue(tokens)
@@ -37007,7 +37559,7 @@ class RubyLex
     end
     code = @line + (line.nil? ? '' : line)
     code.gsub!(/\s*\z/, '').concat("\n")
-    @tokens = ripper_lex_without_warning(code)
+    @tokens = self.class.ripper_lex_without_warning(code)
     @continue = process_continue
     @code_block_open = check_code_block(code)
     @indent = process_nesting_level
@@ -37076,7 +37628,7 @@ class RubyLex
         # "syntax error, unexpected end-of-input, expecting keyword_end"
         #
         #   example:
-        #     if ture
+        #     if true
         #       hoge
         #       if false
         #         fuga
@@ -37437,7 +37989,7 @@ class RubyLex
         start_token << t
         end_type << :on_regexp_end
       when :on_symbeg
-        acceptable_single_tokens = %i{on_ident on_const on_op on_cvar on_ivar on_gvar on_kw}
+        acceptable_single_tokens = %i{on_ident on_const on_op on_cvar on_ivar on_gvar on_kw on_int}
         if (i + 1) < tokens.size and acceptable_single_tokens.all?{ |st| tokens[i + 1][1] != st }
           start_token << t
           end_type << :on_tstring_end
@@ -37489,6 +38041,51 @@ class RubyLex
     else
       nil
     end
+  end
+
+  def check_termination_in_prev_line(code, context: nil)
+    tokens = self.class.ripper_lex_without_warning(code, context: context)
+    past_first_newline = false
+    index = tokens.rindex do |t|
+      # traverse first token before last line
+      if past_first_newline
+        if t.tok.include?("\n")
+          true
+        end
+      elsif t.tok.include?("\n")
+        past_first_newline = true
+        false
+      else
+        false
+      end
+    end
+    if index
+      first_token = nil
+      last_line_tokens = tokens[(index + 1)..(tokens.size - 1)]
+      last_line_tokens.each do |t|
+        unless [:on_sp, :on_ignored_sp, :on_comment].include?(t.event)
+          first_token = t
+          break
+        end
+      end
+      if first_token.nil?
+        return false
+      elsif first_token && first_token.state == Ripper::EXPR_DOT
+        return false
+      else
+        tokens_without_last_line = tokens[0..index]
+        ltype = process_literal_type(tokens_without_last_line)
+        indent = process_nesting_level(tokens_without_last_line)
+        continue = process_continue(tokens_without_last_line)
+        code_block_open = check_code_block(tokens_without_last_line.map(&:tok).join(''), tokens_without_last_line)
+        if ltype or indent > 0 or continue or code_block_open
+          return false
+        else
+          return last_line_tokens.map(&:tok).join('')
+        end
+      end
+    end
+    false
   end
 end
 # :startdoc:
@@ -37749,6 +38346,7 @@ module IRB # :nodoc:
         on_alias_error:     [[RED, REVERSE],          ALL],
         on_class_name_error:[[RED, REVERSE],          ALL],
         on_param_error:     [[RED, REVERSE],          ALL],
+        on___end__:         [[GREEN],                 ALL],
       }
     rescue NameError
       # Give up highlighting Ripper-incompatible older Ruby
@@ -37761,7 +38359,7 @@ module IRB # :nodoc:
 
     class << self
       def colorable?
-        $stdout.tty? && supported? && (/mswin|mingw/ =~ RUBY_PLATFORM || (ENV.key?('TERM') && ENV['TERM'] != 'dumb'))
+        $stdout.tty? && (/mswin|mingw/ =~ RUBY_PLATFORM || (ENV.key?('TERM') && ENV['TERM'] != 'dumb'))
       end
 
       def inspect_colorable?(obj, seen: {}.compare_by_identity)
@@ -37785,26 +38383,27 @@ module IRB # :nodoc:
         end
       end
 
-      def clear
-        return '' unless colorable?
+      def clear(colorable: colorable?)
+        return '' unless colorable
         "\e[#{CLEAR}m"
       end
 
-      def colorize(text, seq)
-        return text unless colorable?
+      def colorize(text, seq, colorable: colorable?)
+        return text unless colorable
         seq = seq.map { |s| "\e[#{const_get(s)}m" }.join('')
-        "#{seq}#{text}#{clear}"
+        "#{seq}#{text}#{clear(colorable: colorable)}"
       end
 
       # If `complete` is false (code is incomplete), this does not warn compile_error.
       # This option is needed to avoid warning a user when the compile_error is happening
       # because the input is not wrong but just incomplete.
-      def colorize_code(code, complete: true, ignore_error: false)
-        return code unless colorable?
+      def colorize_code(code, complete: true, ignore_error: false, colorable: colorable?)
+        return code unless colorable
 
         symbol_state = SymbolState.new
         colored = +''
         length = 0
+        end_seen = false
 
         scan(code, allow_last_error: !complete) do |token, str, expr|
           # IRB::ColorPrinter skips colorizing fragments with any invalid token
@@ -37817,16 +38416,17 @@ module IRB # :nodoc:
             line = Reline::Unicode.escape_for_print(line)
             if seq = dispatch_seq(token, expr, line, in_symbol: in_symbol)
               colored << seq.map { |s| "\e[#{s}m" }.join('')
-              colored << line.sub(/\Z/, clear)
+              colored << line.sub(/\Z/, clear(colorable: colorable))
             else
               colored << line
             end
           end
           length += str.bytesize
+          end_seen = true if token == :on___end__
         end
 
         # give up colorizing incomplete Ripper tokens
-        if length != code.bytesize
+        unless end_seen or length == code.bytesize
           return Reline::Unicode.escape_for_print(code)
         end
 
@@ -37841,11 +38441,6 @@ module IRB # :nodoc:
         block.call
       ensure
         seen.delete(obj)
-      end
-
-      def supported?
-        return @supported if defined?(@supported)
-        @supported = Ripper::Lexer::Elem.method_defined?(:state)
       end
 
       def scan(code, allow_last_error:)
@@ -37944,9 +38539,9 @@ end
 #
 
 module IRB # :nodoc:
-  VERSION = "1.3.4"
+  VERSION = "1.3.6"
   @RELEASE_VERSION = VERSION
-  @LAST_UPDATE_DATE = "2021-02-25"
+  @LAST_UPDATE_DATE = "2021-06-19"
 end
 require "reline"
 
@@ -38560,7 +39155,7 @@ module IRB
       conf[:IRB_RC].call(context) if conf[:IRB_RC]
       conf[:MAIN_CONTEXT] = context
 
-      trap("SIGINT") do
+      prev_trap = trap("SIGINT") do
         signal_handle
       end
 
@@ -38569,6 +39164,7 @@ module IRB
           eval_input
         end
       ensure
+        trap("SIGINT", prev_trap)
         conf[:AT_EXIT].each{|hook| hook.call}
       end
     end
@@ -38611,7 +39207,7 @@ module IRB
         @context.io.prompt
       end
 
-      @scanner.set_input(@context.io) do
+      @scanner.set_input(@context.io, context: @context) do
         signal_status(:IN_INPUT) do
           if l = @context.io.gets
             print l if @context.verbose?
@@ -38677,9 +39273,15 @@ module IRB
       end
     end
 
-    def convert_invalid_byte_sequence(str)
-      str = str.force_encoding(Encoding::ASCII_8BIT)
-      conv = Encoding::Converter.new(Encoding::ASCII_8BIT, Encoding::UTF_8)
+    def convert_invalid_byte_sequence(str, enc)
+      str.force_encoding(enc)
+      str.scrub { |c|
+        c.bytes.map{ |b| "\\x#{b.to_s(16).upcase}" }.join
+      }
+    end
+
+    def encode_with_invalid_byte_sequence(str, enc)
+      conv = Encoding::Converter.new(str.encoding, enc)
       dst = String.new
       begin
         ret = conv.primitive_convert(str, dst)
@@ -38727,7 +39329,8 @@ module IRB
           message = exc.full_message(order: :top)
           order = :top
         end
-        message = convert_invalid_byte_sequence(message)
+        message = convert_invalid_byte_sequence(message, exc.message.encoding)
+        message = encode_with_invalid_byte_sequence(message, IRB.conf[:LC_MESSAGES].encoding) unless message.encoding.to_s.casecmp?(IRB.conf[:LC_MESSAGES].encoding.to_s)
         message = message.gsub(/((?:^\t.+$\n)+)/)  { |m|
           case order
           when :top
@@ -39945,7 +40548,7 @@ class PP < PrettyPrint
         else
           sep.call
         end
-        yield(*v, **{})
+        RUBY_VERSION >= "3.0" ? yield(*v, **{}) : yield(*v)
       }
     end
 

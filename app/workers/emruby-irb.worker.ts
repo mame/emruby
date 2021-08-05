@@ -26,21 +26,14 @@ const mystdin = () => {
   const key = Atomics.load(buffer, i);
   Atomics.store(buffer, i, -1);
   i = (i + 1) % 1024;
-  return key < 0 ? null : key;
+  return key;
 };
 
 self.Module = {
   locateFile: (path) => root + path,
   postRun: [() => self.postMessage(["terminated"])],
   thisProgram: "ruby",
-  arguments: [
-    "-I/",
-    "-I/lib",
-    "-I/.ext/common",
-    "-rirb",
-    "-e",
-    "def $stdout.tty? = true; ENV['TERM']='xterm'; IRB.start(__FILE__)",
-  ],
+  arguments: ["-I/", "-I/lib", "-I/.ext/common", "emruby-irb.rb"],
   stdin: mystdin,
   stdout: (key) => self.postMessage(["output", key]),
   stderr: (key) => self.postMessage(["output", key]),

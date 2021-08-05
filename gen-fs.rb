@@ -1,12 +1,16 @@
 #!/usr/bin/env ruby
 
 file_packager = File.dirname(`which emcc`.chomp) + "/tools/file_packager"
+unless File.exist?(file_packager)
+  file_packager = "/usr/share/emscripten/tools/file_packager"
+end
 
 files = []
 
 files += %w(
  libexec/irb
  rbconfig.rb
+ ../emruby-irb.rb@emruby-irb.rb
 )
 
 files += %w(
