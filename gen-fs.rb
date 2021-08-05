@@ -46,6 +46,11 @@ files += %w(
  rubygems/core_ext/kernel_warn.rb
  rubygems.rb
  rubygems/path_support.rb
+ error_highlight/base.rb
+ error_highlight/core_ext.rb
+ error_highlight/formatter.rb
+ error_highlight/version.rb
+ error_highlight.rb
  did_you_mean/version.rb
  did_you_mean/core_ext/name_error.rb
  did_you_mean/levenshtein.rb
