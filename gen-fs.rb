@@ -11,6 +11,7 @@ files += %w(
  libexec/irb
  rbconfig.rb
  ../emruby-irb.rb@emruby-irb.rb
+ ../reline-terminfo.rb@lib/reline/terminfo.rb
 )
 
 files += %w(

@@ -169,7 +169,7 @@ module RbConfig
   CONFIG["ASFLAGS"] = ""
   CONFIG["ARFLAGS"] = "rcD "
   CONFIG["try_header"] = ""
-  CONFIG["CC_VERSION_MESSAGE"] = "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 2.0.12\nCopyright (C) 2014 the Emscripten authors (see AUTHORS.txt)\nThis is free and open source software under the MIT license.\nThere is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n  "
+  CONFIG["CC_VERSION_MESSAGE"] = "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 2.0.15 (7685e4ec373dca607781d3995c3fc2ba229ce9d8)\nCopyright (C) 2014 the Emscripten authors (see AUTHORS.txt)\nThis is free and open source software under the MIT license.\nThere is NO warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n  "
   CONFIG["CC_VERSION"] = "$(CC) --version"
   CONFIG["MJIT_CC"] = "emcc"
   CONFIG["CSRCFLAG"] = ""
@@ -362,30 +362,17 @@ module RbConfig
   end
 end
 CROSS_COMPILING = nil unless defined? CROSS_COMPILING
-class DummyIO
-  def write(str)
-    str.bytes do |ch|
-      emscripten_run_script_int("Module.test_func(#{ ch })")
-    end
-  end
-
-  def tty?
-    true
-  end
-end
-
-#$stdout = $stderr = DummyIO.new
-
 def $stdout.tty? = true
-
-$LOAD_PATH << "/"
-$LOAD_PATH << "/lib"
-$LOAD_PATH << "/.ext/common"
 
 require "irb"
 
 ENV["TERM"] = "xterm"
 IRB.start(__FILE__)
+module Reline::Terminfo
+  def self.enabled?
+    false
+  end
+end
 # frozen_string_literal: false
 # = monitor.rb
 #

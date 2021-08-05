@@ -26,7 +26,7 @@ const mystdin = () => {
   const key = Atomics.load(buffer, i);
   Atomics.store(buffer, i, -1);
   i = (i + 1) % 1024;
-  return key;
+  return key < 0 ? null : key;
 };
 
 self.Module = {
