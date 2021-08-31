@@ -11,7 +11,7 @@ const Term = dynamic(() => import("../components/Term"), { ssr: false });
 const Irb: FC = () => {
   useEffect(() => {
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js").then(
+      navigator.serviceWorker.register(`${process.env.BASE_PATH}/sw.js`).then(
         function (registration) {
           console.log(
             "COOP/COEP Service Worker registered: ",
