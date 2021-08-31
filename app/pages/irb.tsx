@@ -9,6 +9,24 @@ import "xterm/css/xterm.css";
 const Term = dynamic(() => import("../components/Term"), { ssr: false });
 
 const Irb: FC = () => {
+  useEffect(() => {
+  console.log(navigator);
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").then(
+        function (registration) {
+          console.log(
+            "COOP/COEP Service Worker registered: ",
+            registration.scope
+          );
+        },
+        function (err) {
+          console.log("COOP/COEP Service Worker failed to register: ", err);
+        }
+      );
+    } else {
+      console.warn("Cannot register COOP/COEP Service Worker");
+    }
+  }, []);
   const [xterm, setXterm] = useState<Terminal>();
   const [localEcho, setLocalEcho] = useState<any>(null);
   const [message, setMessage] = useState<any>(<>Status: Not initialized</>);
