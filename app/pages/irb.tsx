@@ -10,6 +10,7 @@ const Term = dynamic(() => import("../components/Term"), { ssr: false });
 
 const Irb: FC = () => {
   useEffect(() => {
+    // https://dev.to/stefnotch/enabling-coop-coep-without-touching-the-server-2d3n
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register(`${process.env.BASE_PATH}/sw.js`).then(
         function (registration) {
@@ -17,6 +18,9 @@ const Irb: FC = () => {
             "COOP/COEP Service Worker registered: ",
             registration.scope
           );
+          if (registration.active && !navigator.serviceWorker.controller) {
+            window.location.reload();
+          }
         },
         function (err) {
           console.log("COOP/COEP Service Worker failed to register: ", err);
