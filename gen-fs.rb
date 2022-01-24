@@ -52,20 +52,26 @@ files += %w(
  error_highlight/formatter.rb
  error_highlight/version.rb
  error_highlight.rb
- did_you_mean/version.rb
  did_you_mean/core_ext/name_error.rb
- did_you_mean/levenshtein.rb
+ did_you_mean/did_you_mean.gemspec
+ did_you_mean/experimental.rb
+ did_you_mean/formatter.rb
+ did_you_mean/formatters/plain_formatter.rb
+ did_you_mean/formatters/verbose_formatter.rb
  did_you_mean/jaro_winkler.rb
+ did_you_mean/levenshtein.rb
  did_you_mean/spell_checker.rb
+ did_you_mean/spell_checkers/key_error_checker.rb
+ did_you_mean/spell_checkers/method_name_checker.rb
+ did_you_mean/spell_checkers/name_error_checkers.rb
  did_you_mean/spell_checkers/name_error_checkers/class_name_checker.rb
  did_you_mean/spell_checkers/name_error_checkers/variable_name_checker.rb
- did_you_mean/spell_checkers/name_error_checkers.rb
- did_you_mean/spell_checkers/method_name_checker.rb
- did_you_mean/spell_checkers/key_error_checker.rb
  did_you_mean/spell_checkers/null_checker.rb
- did_you_mean/tree_spell_checker.rb
+ did_you_mean/spell_checkers/pattern_key_name_checker.rb
  did_you_mean/spell_checkers/require_path_checker.rb
- did_you_mean/formatters/plain_formatter.rb
+ did_you_mean/tree_spell_checker.rb
+ did_you_mean/verbose.rb
+ did_you_mean/version.rb
  did_you_mean.rb
  tsort.rb
  rubygems/request_set/gem_dependency_api.rb
@@ -186,6 +192,120 @@ files += %w(
  irb/color_printer.rb
  irb/ext/save-history.rb
  irb/lc/error.rb
+ rdoc.rb
+ rdoc/markdown.rb
+ rdoc/parser/markdown.rb
+ rdoc/parser/rd.rb
+ rdoc/parser/changelog.rb
+ rdoc/parser/simple.rb
+ rdoc/parser/text.rb
+ rdoc/parser/ruby_tools.rb
+ rdoc/parser/c.rb
+ rdoc/parser/ripper_state_lex.rb
+ rdoc/parser/ruby.rb
+ rdoc/servlet.rb
+ rdoc/stats.rb
+ rdoc/version.rb
+ rdoc/stats/normal.rb
+ rdoc/stats/verbose.rb
+ rdoc/stats/quiet.rb
+ rdoc/markdown/literals.rb
+ rdoc/markdown/entities.rb
+ rdoc/erbio.rb
+ rdoc/single_class.rb
+ rdoc/code_object.rb
+ rdoc/rdoc.gemspec
+ rdoc/rd.rb
+ rdoc/store.rb
+ rdoc/anon_class.rb
+ rdoc/options.rb
+ rdoc/erb_partial.rb
+ rdoc/any_method.rb
+ rdoc/meta_method.rb
+ rdoc/task.rb
+ rdoc/extend.rb
+ rdoc/ri/store.rb
+ rdoc/ri/driver.rb
+ rdoc/ri/task.rb
+ rdoc/ri/paths.rb
+ rdoc/ri/formatter.rb
+ rdoc/generator/pot.rb
+ rdoc/generator/pot/po_entry.rb
+ rdoc/generator/pot/po.rb
+ rdoc/generator/pot/message_extractor.rb
+ rdoc/generator/darkfish.rb
+ rdoc/generator/markup.rb
+ rdoc/generator/ri.rb
+ rdoc/generator/json_index.rb
+ rdoc/attr.rb
+ rdoc/text.rb
+ rdoc/markup/to_test.rb
+ rdoc/markup/to_joined_paragraph.rb
+ rdoc/markup/paragraph.rb
+ rdoc/markup/list_item.rb
+ rdoc/markup/to_markdown.rb
+ rdoc/markup/raw.rb
+ rdoc/markup/heading.rb
+ rdoc/markup/rule.rb
+ rdoc/markup/hard_break.rb
+ rdoc/markup/attr_changer.rb
+ rdoc/markup/list.rb
+ rdoc/markup/to_html_crossref.rb
+ rdoc/markup/regexp_handling.rb
+ rdoc/markup/indented_paragraph.rb
+ rdoc/markup/attribute_manager.rb
+ rdoc/markup/to_bs.rb
+ rdoc/markup/blank_line.rb
+ rdoc/markup/verbatim.rb
+ rdoc/markup/pre_process.rb
+ rdoc/markup/attr_span.rb
+ rdoc/markup/include.rb
+ rdoc/markup/attributes.rb
+ rdoc/markup/to_ansi.rb
+ rdoc/markup/to_html_snippet.rb
+ rdoc/markup/to_tt_only.rb
+ rdoc/markup/formatter.rb
+ rdoc/markup/block_quote.rb
+ rdoc/markup/to_table_of_contents.rb
+ rdoc/markup/to_html.rb
+ rdoc/markup/to_rdoc.rb
+ rdoc/markup/document.rb
+ rdoc/markup/parser.rb
+ rdoc/markup/table.rb
+ rdoc/markup/to_label.rb
+ rdoc/include.rb
+ rdoc/rd/block_parser.rb
+ rdoc/rd/inline.rb
+ rdoc/rd/inline_parser.rb
+ rdoc/rubygems_hook.rb
+ rdoc/context.rb
+ rdoc/generator.rb
+ rdoc/tom_doc.rb
+ rdoc/mixin.rb
+ rdoc/class_module.rb
+ rdoc/rdoc.rb
+ rdoc/encoding.rb
+ rdoc/i18n/locale.rb
+ rdoc/i18n/text.rb
+ rdoc/require.rb
+ rdoc/ghost_method.rb
+ rdoc/markup.rb
+ rdoc/i18n.rb
+ rdoc/.document
+ rdoc/alias.rb
+ rdoc/constant.rb
+ rdoc/ri.rb
+ rdoc/method_attr.rb
+ rdoc/comment.rb
+ rdoc/normal_class.rb
+ rdoc/known_classes.rb
+ rdoc/token_stream.rb
+ rdoc/cross_reference.rb
+ rdoc/parser.rb
+ rdoc/normal_module.rb
+ rdoc/top_level.rb
+ rdoc/code_objects.rb
+ rdoc/context/section.rb
 ).map {|f| "lib/" + f }
 
 Dir.chdir("ruby") do
