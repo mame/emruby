@@ -2,7 +2,10 @@
 
 file_packager = File.dirname(`which emcc`.chomp) + "/tools/file_packager"
 unless File.exist?(file_packager)
-  file_packager = "/usr/share/emscripten/tools/file_packager"
+  file_packager = File.dirname(File.dirname(File.realpath(`which emcc`.chomp))) + "/libexec/tools/file_packager"
+  unless File.exist?(file_packager)
+    file_packager = "/usr/share/emscripten/tools/file_packager"
+  end
 end
 
 files = []
