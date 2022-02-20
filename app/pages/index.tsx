@@ -118,6 +118,8 @@ const Home: FC = () => {
       <ul>
         <li>
           <Link href="/irb">irb (experimental)</Link>
+        </li>
+        <li>
           <Link href="/irb-reline">irb with reline (very experimental)</Link>
         </li>
         <li>
