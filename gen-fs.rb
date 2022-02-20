@@ -24,6 +24,7 @@ files += %w(
  ripper/filter.rb
  ripper/sexp.rb
  ripper.rb
+ date.rb
 ).map {|f| ".ext/common/" + f }
 
 files += %w(
@@ -309,6 +310,26 @@ files += %w(
  rdoc/top_level.rb
  rdoc/code_objects.rb
  rdoc/context/section.rb
+ abbrev.rb
+ optparse.rb
+ optparse/ac.rb
+ optparse/date.rb
+ optparse/kwargs.rb
+ optparse/shellwords.rb
+ optparse/time.rb
+ optparse/uri.rb
+ optparse/version.rb
+ find.rb
+ time.rb
+ erb.rb
+ erb/version.rb
+ cgi.rb
+ cgi/cookie.rb
+ cgi/core.rb
+ cgi/html.rb
+ cgi/session.rb
+ cgi/session/pstore.rb
+ cgi/util.rb
 ).map {|f| "lib/" + f }
 
 Dir.chdir("ruby") do
