@@ -108,8 +108,11 @@ const Irb: FC = () => {
       <Head>
         <title>irb (experimental)</title>
       </Head>
-      <h1 className="mb-5">irb on WASM (very experimental)</h1>
-      <p>Note: This works on only Chrome before version 91</p>
+      <h1 className="mb-5">irb (experimental)</h1>
+      <p>
+        Note: We have confirmed that it works with Google Chrome 98 and Firefox
+        97. It would not work on Safari.
+      </p>
       <p>{message}</p>
       <Term onXterm={onXterm} needFit={true} needLocalEcho={true} />
       <p className="mt-4">
