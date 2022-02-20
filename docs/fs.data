@@ -55,7 +55,7 @@ module RbConfig
   CONFIG["RUBY_SEARCH_PATH"] = ""
   CONFIG["UNIVERSAL_INTS"] = ""
   CONFIG["UNIVERSAL_ARCHNAMES"] = ""
-  CONFIG["configure_args"] = " '--build' 'x86_64-pc-linux-gnu' '--host' 'wasm32-unknown-emscripten' '--with-static-linked-ext' '--with-ext=stringio,ripper,date,strscan,io/console,io/wait,monitor,digest,pathname,psych' 'optflags=-Os' 'debugflags=-g0' 'CC=emcc' 'LD=emcc' 'AR=emar' 'RANLIB=emranlib' 'cflags=-s ASYNCIFY_STACK_SIZE=65535' 'build_alias=x86_64-pc-linux-gnu' 'host_alias=wasm32-unknown-emscripten'"
+  CONFIG["configure_args"] = " '--build' 'x86_64-pc-linux-gnu' '--host' 'wasm32-unknown-emscripten' '--with-static-linked-ext' '--with-ext=stringio,ripper,date,strscan,io/console,io/wait,monitor,digest,pathname,psych' 'optflags=-Os' 'debugflags=-g0' 'CC=emcc' 'LD=emcc' 'AR=emar' 'RANLIB=emranlib' 'LDFLAGS=-sASYNCIFY_STACK_SIZE=65536' 'cflags=-DNDEBUG' 'build_alias=x86_64-pc-linux-gnu' 'host_alias=wasm32-unknown-emscripten'"
   CONFIG["CONFIGURE"] = "configure"
   CONFIG["vendorarchdir"] = "$(vendorlibdir)/$(sitearch)"
   CONFIG["vendorlibdir"] = "$(vendordir)/$(ruby_version)"
@@ -140,7 +140,7 @@ module RbConfig
   CONFIG["CCDLFLAGS"] = "-fPIC"
   CONFIG["STATIC"] = ""
   CONFIG["ARCH_FLAG"] = ""
-  CONFIG["DLDFLAGS"] = ""
+  CONFIG["DLDFLAGS"] = "-sASYNCIFY_STACK_SIZE=65536"
   CONFIG["ALLOCA"] = ""
   CONFIG["dsymutil"] = ""
   CONFIG["codesign"] = ""
@@ -183,7 +183,7 @@ module RbConfig
   CONFIG["CXXFLAGS"] = ""
   CONFIG["OBJEXT"] = "o"
   CONFIG["CPPFLAGS"] = " $(DEFS) $(cppflags)"
-  CONFIG["LDFLAGS"] = "-L. -sALLOW_MEMORY_GROWTH=1 -sASYNCIFY -sFORCE_FILESYSTEM=1"
+  CONFIG["LDFLAGS"] = "-L. -sASYNCIFY_STACK_SIZE=65536 -sALLOW_MEMORY_GROWTH=1 -sASYNCIFY -sFORCE_FILESYSTEM=1"
   CONFIG["CFLAGS"] = "$(cflags)"
   CONFIG["STRIP"] = "strip"
   CONFIG["RANLIB"] = "emranlib"
@@ -218,7 +218,7 @@ module RbConfig
   CONFIG["GIT"] = "git"
   CONFIG["cxxflags"] = ""
   CONFIG["cppflags"] = ""
-  CONFIG["cflags"] = "-s ASYNCIFY_STACK_SIZE=65535 -fdeclspec $(optflags) $(debugflags) $(warnflags)"
+  CONFIG["cflags"] = "-DNDEBUG -fdeclspec $(optflags) $(debugflags) $(warnflags)"
   CONFIG["target_alias"] = ""
   CONFIG["host_alias"] = ""
   CONFIG["build_alias"] = "x86_64-pc-linux-gnu"
@@ -4443,6 +4443,9 @@ class Gem::Platform
   CURRENT = 'current'.freeze
 end
 # frozen_string_literal: true
+
+require_relative "deprecate"
+
 ##
 # The Version class processes string versions into comparable
 # values. A version string should normally be a series of numbers
@@ -4592,8 +4595,6 @@ end
 #
 # For the last example, single-digit versions are automatically extended with
 # a zero to give a sensible result.
-
-require_relative "deprecate"
 
 class Gem::Version
   autoload :Requirement, File.expand_path('requirement', __dir__)
@@ -5146,7 +5147,7 @@ class Gem::Version
   Requirement = Gem::Requirement # :nodoc:
 end
 # frozen_string_literal: true
-# -*- coding: utf-8 -*-
+#
 #--
 # Copyright 2006 by Chad Fowler, Rich Kilmer, Jim Weirich and others.
 # All rights reserved.
@@ -15003,7 +15004,7 @@ module Enumerable
   # Needs to `require "set"` to use this method.
   def to_set(klass = Set, *args, &block)
     klass.new(self, *args, &block)
-  end
+  end unless method_defined?(:to_set)
 end
 
 autoload :SortedSet, "#{__dir__}/set/sorted_set"
@@ -38876,7 +38877,7 @@ module IRB # :nodoc:
           alias_method to, from
         }
       else
-        print "irb: warn: can't alias #{to} from #{from}.\n"
+        Kernel.print "irb: warn: can't alias #{to} from #{from}.\n"
       end
     end
 
@@ -43002,7 +43003,7 @@ module RDoc
 
   class Error < RuntimeError; end
 
-  require 'rdoc/version'
+  require_relative 'rdoc/version'
 
   ##
   # Method visibilities
@@ -43081,62 +43082,62 @@ module RDoc
     end
   end
 
-  autoload :RDoc,           'rdoc/rdoc'
+  autoload :RDoc,           "#{__dir__}/rdoc/rdoc"
 
-  autoload :CrossReference, 'rdoc/cross_reference'
-  autoload :ERBIO,          'rdoc/erbio'
-  autoload :ERBPartial,     'rdoc/erb_partial'
-  autoload :Encoding,       'rdoc/encoding'
-  autoload :Generator,      'rdoc/generator'
-  autoload :Options,        'rdoc/options'
-  autoload :Parser,         'rdoc/parser'
-  autoload :Servlet,        'rdoc/servlet'
-  autoload :RI,             'rdoc/ri'
-  autoload :Stats,          'rdoc/stats'
-  autoload :Store,          'rdoc/store'
-  autoload :Task,           'rdoc/task'
-  autoload :Text,           'rdoc/text'
+  autoload :CrossReference, "#{__dir__}/rdoc/cross_reference"
+  autoload :ERBIO,          "#{__dir__}/rdoc/erbio"
+  autoload :ERBPartial,     "#{__dir__}/rdoc/erb_partial"
+  autoload :Encoding,       "#{__dir__}/rdoc/encoding"
+  autoload :Generator,      "#{__dir__}/rdoc/generator"
+  autoload :Options,        "#{__dir__}/rdoc/options"
+  autoload :Parser,         "#{__dir__}/rdoc/parser"
+  autoload :Servlet,        "#{__dir__}/rdoc/servlet"
+  autoload :RI,             "#{__dir__}/rdoc/ri"
+  autoload :Stats,          "#{__dir__}/rdoc/stats"
+  autoload :Store,          "#{__dir__}/rdoc/store"
+  autoload :Task,           "#{__dir__}/rdoc/task"
+  autoload :Text,           "#{__dir__}/rdoc/text"
 
-  autoload :Markdown,       'rdoc/markdown'
-  autoload :Markup,         'rdoc/markup'
-  autoload :RD,             'rdoc/rd'
-  autoload :TomDoc,         'rdoc/tom_doc'
+  autoload :Markdown,       "#{__dir__}/rdoc/markdown"
+  autoload :Markup,         "#{__dir__}/rdoc/markup"
+  autoload :RD,             "#{__dir__}/rdoc/rd"
+  autoload :TomDoc,         "#{__dir__}/rdoc/tom_doc"
 
-  autoload :KNOWN_CLASSES,  'rdoc/known_classes'
+  autoload :KNOWN_CLASSES,  "#{__dir__}/rdoc/known_classes"
 
-  autoload :TokenStream,    'rdoc/token_stream'
+  autoload :TokenStream,    "#{__dir__}/rdoc/token_stream"
 
-  autoload :Comment,        'rdoc/comment'
+  autoload :Comment,        "#{__dir__}/rdoc/comment"
 
-  require 'rdoc/i18n'
+  require_relative 'rdoc/i18n'
 
   # code objects
   #
   # We represent the various high-level code constructs that appear in Ruby
   # programs: classes, modules, methods, and so on.
-  autoload :CodeObject,     'rdoc/code_object'
+  autoload :CodeObject,     "#{__dir__}/rdoc/code_object"
 
-  autoload :Context,        'rdoc/context'
-  autoload :TopLevel,       'rdoc/top_level'
+  autoload :Context,        "#{__dir__}/rdoc/context"
+  autoload :TopLevel,       "#{__dir__}/rdoc/top_level"
 
-  autoload :AnonClass,      'rdoc/anon_class'
-  autoload :ClassModule,    'rdoc/class_module'
-  autoload :NormalClass,    'rdoc/normal_class'
-  autoload :NormalModule,   'rdoc/normal_module'
-  autoload :SingleClass,    'rdoc/single_class'
+  autoload :AnonClass,      "#{__dir__}/rdoc/anon_class"
+  autoload :ClassModule,    "#{__dir__}/rdoc/class_module"
+  autoload :NormalClass,    "#{__dir__}/rdoc/normal_class"
+  autoload :NormalModule,   "#{__dir__}/rdoc/normal_module"
+  autoload :SingleClass,    "#{__dir__}/rdoc/single_class"
 
-  autoload :Alias,          'rdoc/alias'
-  autoload :AnyMethod,      'rdoc/any_method'
-  autoload :MethodAttr,     'rdoc/method_attr'
-  autoload :GhostMethod,    'rdoc/ghost_method'
-  autoload :MetaMethod,     'rdoc/meta_method'
-  autoload :Attr,           'rdoc/attr'
+  autoload :Alias,          "#{__dir__}/rdoc/alias"
+  autoload :AnyMethod,      "#{__dir__}/rdoc/any_method"
+  autoload :MethodAttr,     "#{__dir__}/rdoc/method_attr"
+  autoload :GhostMethod,    "#{__dir__}/rdoc/ghost_method"
+  autoload :MetaMethod,     "#{__dir__}/rdoc/meta_method"
+  autoload :Attr,           "#{__dir__}/rdoc/attr"
 
-  autoload :Constant,       'rdoc/constant'
-  autoload :Mixin,          'rdoc/mixin'
-  autoload :Include,        'rdoc/include'
-  autoload :Extend,         'rdoc/extend'
-  autoload :Require,        'rdoc/require'
+  autoload :Constant,       "#{__dir__}/rdoc/constant"
+  autoload :Mixin,          "#{__dir__}/rdoc/mixin"
+  autoload :Include,        "#{__dir__}/rdoc/include"
+  autoload :Extend,         "#{__dir__}/rdoc/extend"
+  autoload :Require,        "#{__dir__}/rdoc/require"
 
 end
 # coding: UTF-8
@@ -43340,6 +43341,7 @@ class RDoc::Markdown
       @result = nil
       @failed_rule = nil
       @failing_rule_offset = -1
+      @line_offsets = nil
 
       setup_foreign_grammar
     end
@@ -43356,17 +43358,32 @@ class RDoc::Markdown
       target + 1
     end
 
-    def current_line(target=pos)
-      cur_offset = 0
-      cur_line = 0
+    if [].respond_to? :bsearch_index
+      def current_line(target=pos)
+        unless @line_offsets
+          @line_offsets = []
+          total = 0
+          string.each_line do |line|
+            total += line.size
+            @line_offsets << total
+          end
+        end
 
-      string.each_line do |line|
-        cur_line += 1
-        cur_offset += line.size
-        return cur_line if cur_offset >= target
+        @line_offsets.bsearch_index {|x| x >= target } + 1 || -1
       end
+    else
+      def current_line(target=pos)
+        cur_offset = 0
+        cur_line = 0
 
-      -1
+        string.each_line do |line|
+          cur_line += 1
+          cur_offset += line.size
+          return cur_line if cur_offset >= target
+        end
+
+        -1
+      end
     end
 
     def lines
@@ -43674,11 +43691,11 @@ class RDoc::Markdown
 
 
 
-  require 'rdoc'
-  require 'rdoc/markup/to_joined_paragraph'
-  require 'rdoc/markdown/entities'
+  require_relative '../rdoc'
+  require_relative 'markup/to_joined_paragraph'
+  require_relative 'markdown/entities'
 
-  require 'rdoc/markdown/literals'
+  require_relative 'markdown/literals'
 
   ##
   # Supported extensions
@@ -58059,7 +58076,7 @@ class RDoc::Markdown
     return _tmp
   end
 
-  # RawLine = (< (!"\r" !"\n" .)* @Newline > | < .+ > @Eof) { text }
+  # RawLine = (< /[^\r\n]*/ @Newline > | < .+ > @Eof) { text }
   def _RawLine
 
     _save = self.pos
@@ -58071,36 +58088,7 @@ class RDoc::Markdown
 
         _save2 = self.pos
         while true # sequence
-          while true
-
-            _save4 = self.pos
-            while true # sequence
-              _save5 = self.pos
-              _tmp = match_string("\r")
-              _tmp = _tmp ? nil : true
-              self.pos = _save5
-              unless _tmp
-                self.pos = _save4
-                break
-              end
-              _save6 = self.pos
-              _tmp = match_string("\n")
-              _tmp = _tmp ? nil : true
-              self.pos = _save6
-              unless _tmp
-                self.pos = _save4
-                break
-              end
-              _tmp = get_byte
-              unless _tmp
-                self.pos = _save4
-              end
-              break
-            end # end sequence
-
-            break unless _tmp
-          end
-          _tmp = true
+          _tmp = scan(/\G(?-mix:[^\r\n]*)/)
           unless _tmp
             self.pos = _save2
             break
@@ -58118,10 +58106,10 @@ class RDoc::Markdown
         break if _tmp
         self.pos = _save1
 
-        _save7 = self.pos
+        _save3 = self.pos
         while true # sequence
           _text_start = self.pos
-          _save8 = self.pos
+          _save4 = self.pos
           _tmp = get_byte
           if _tmp
             while true
@@ -58130,18 +58118,18 @@ class RDoc::Markdown
             end
             _tmp = true
           else
-            self.pos = _save8
+            self.pos = _save4
           end
           if _tmp
             text = get_text(_text_start)
           end
           unless _tmp
-            self.pos = _save7
+            self.pos = _save3
             break
           end
           _tmp = _Eof()
           unless _tmp
-            self.pos = _save7
+            self.pos = _save3
           end
           break
         end # end sequence
@@ -59802,7 +59790,7 @@ class RDoc::Markdown
   Rules[:_OptionallyIndentedLine] = rule_info("OptionallyIndentedLine", "Indent? Line")
   Rules[:_StartList] = rule_info("StartList", "&. { [] }")
   Rules[:_Line] = rule_info("Line", "@RawLine:a { a }")
-  Rules[:_RawLine] = rule_info("RawLine", "(< (!\"\\r\" !\"\\n\" .)* @Newline > | < .+ > @Eof) { text }")
+  Rules[:_RawLine] = rule_info("RawLine", "(< /[^\\r\\n]*/ @Newline > | < .+ > @Eof) { text }")
   Rules[:_SkipBlock] = rule_info("SkipBlock", "(HtmlBlock | (!\"\#\" !SetextBottom1 !SetextBottom2 !@BlankLine @RawLine)+ @BlankLine* | @BlankLine+ | @RawLine)")
   Rules[:_ExtendedSpecialChar] = rule_info("ExtendedSpecialChar", "&{ notes? } \"^\"")
   Rules[:_NoteReference] = rule_info("NoteReference", "&{ notes? } RawNoteReference:ref { note_for ref }")
@@ -60742,92 +60730,82 @@ class RDoc::Parser::C < RDoc::Parser
 
     @content.scan(
       %r(
+        (?<open>\s*\(\s*) {0}
+        (?<close>\s*\)\s*) {0}
+        (?<name>\s*"(?<class_name>\w+)") {0}
+        (?<parent>\s*(?:
+          (?<parent_name>[\w\*\s\(\)\.\->]+) |
+          rb_path2class\s*\(\s*"(?<path>[\w:]+)"\s*\)
+        )) {0}
+        (?<under>\w+) {0}
+
         (?<var_name>[\w\.]+)\s* =
         \s*rb_(?:
           define_(?:
-            class(?: # rb_define_class(class_name_1, parent_name_1)
-              \s*\(
-                \s*"(?<class_name_1>\w+)",
-                \s*(?<parent_name_1>\w+)\s*
-              \)
-            |
-              _under\s*\( # rb_define_class_under(class_under, class_name2, parent_name2...)
-                \s* (?<class_under>\w+),
-                \s* "(?<class_name_2>\w+)",
-                \s*
-                (?:
-                  (?<parent_name_2>[\w\*\s\(\)\.\->]+) |
-                  rb_path2class\("(?<path>[\w:]+)"\)
-                )
+            class(?: # rb_define_class(name, parent_name)
+              \(\s*
+                \g<name>,
+                \g<parent>
               \s*\)
+            |
+              _under\g<open> # rb_define_class_under(under, name, parent_name...)
+                \g<under>,
+                \g<name>,
+                \g<parent>
+              \g<close>
             )
           |
-            module(?: # rb_define_module(module_name_1)
-              \s*\(
-                \s*"(?<module_name_1>\w+)"\s*
-              \)
+            (?<module>)
+            module(?: # rb_define_module(name)
+              \g<open>
+                \g<name>
+              \g<close>
             |
-              _under\s*\( # rb_define_module_under(module_under, module_name_2)
-                \s*(?<module_under>\w+),
-                \s*"(?<module_name_2>\w+)"
-              \s*\)
+              _under\g<open> # rb_define_module_under(under, name)
+                \g<under>,
+                \g<name>
+              \g<close>
             )
           )
       |
-        struct_define_without_accessor\s*\( # rb_struct_define_without_accessor(class_name_3, parent_name_3, ...)
-          \s*"(?<class_name_3>\w+)",
-          \s*(?<parent_name_3>\w+),
-          \s*\w+,        # Allocation function
-          (?:\s*"\w+",)* # Attributes
-          \s*NULL
-        \)
+        (?<attributes>(?:\s*"\w+",)*\s*NULL\s*) {0}
+        struct_define(?:
+          \g<open> # rb_struct_define(name, ...)
+            \g<name>,
+        |
+          _under\g<open> # rb_struct_define_under(under, name, ...)
+            \g<under>,
+            \g<name>,
+        |
+          _without_accessor(?:
+            \g<open> # rb_struct_define_without_accessor(name, parent_name, ...)
+          |
+            _under\g<open> # rb_struct_define_without_accessor_under(under, name, parent_name, ...)
+              \g<under>,
+          )
+            \g<name>,
+            \g<parent>,
+            \s*\w+,        # Allocation function
+        )
+          \g<attributes>
+        \g<close>
       |
-        singleton_class\s*\( # rb_singleton_class(target_class_name)
-          \s*(?<target_class_name>\w+)
-        \)
+        singleton_class\g<open> # rb_singleton_class(target_class_name)
+          (?<target_class_name>\w+)
+        \g<close>
         )
       )mx
     ) do
-      class_name = $~[:class_name_1]
-      type = :class
-      if class_name
-        # rb_define_class(class_name_1, parent_name_1)
-        parent_name = $~[:parent_name_1]
-        #under = nil
-      else
-        class_name = $~[:class_name_2]
-        if class_name
-          # rb_define_class_under(class_under, class_name2, parent_name2...)
-          parent_name = $~[:parent_name_2] || $~[:path]
-          under = $~[:class_under]
-        else
-          class_name = $~[:class_name_3]
-          if class_name
-            # rb_struct_define_without_accessor(class_name_3, parent_name_3, ...)
-            parent_name = $~[:parent_name_3]
-            #under = nil
-          else
-            type = :module
-            class_name = $~[:module_name_1]
-            #parent_name = nil
-            if class_name
-              # rb_define_module(module_name_1)
-              #under = nil
-            else
-              class_name = $~[:module_name_2]
-              if class_name
-                # rb_define_module_under(module_under, module_name_1)
-                under = $~[:module_under]
-              else
-                # rb_singleton_class(target_class_name)
-                target_class_name = $~[:target_class_name]
-                handle_singleton $~[:var_name], target_class_name
-                next
-              end
-            end
-          end
-        end
+      if target_class_name = $~[:target_class_name]
+        # rb_singleton_class(target_class_name)
+        handle_singleton $~[:var_name], target_class_name
+        next
       end
+
+      type = $~[:module] ? :module : :class
+      class_name = $~[:class_name]
+      parent_name = $~[:parent_name] || $~[:path]
+      under = $~[:under]
 
       handle_class_module($~[:var_name], type, class_name, parent_name, under)
     end
@@ -61472,7 +61450,8 @@ class RDoc::Parser::C < RDoc::Parser
                           elsif p_count == -1 then # argc, argv
                             rb_scan_args body
                           else
-                            "(#{(1..p_count).map { |i| "p#{i}" }.join ', '})"
+                            args = (1..p_count).map { |i| "p#{i}" }
+                            "(#{args.join ', '})"
                           end
 
 
@@ -62674,6 +62653,29 @@ class RDoc::Parser::Ruby < RDoc::Parser
   end
 
   ##
+  # Skip opening parentheses and yield the block.
+  # Skip closing parentheses too when exists.
+
+  def skip_parentheses(&block)
+    left_tk = peek_tk
+
+    if :on_lparen == left_tk[:kind]
+      get_tk
+
+      ret = skip_parentheses(&block)
+
+      right_tk = peek_tk
+      if :on_rparen == right_tk[:kind]
+        get_tk
+      end
+
+      ret
+    else
+      yield
+    end
+  end
+
+  ##
   # Return a superclass, which can be either a constant of an expression
 
   def get_class_specification
@@ -63107,7 +63109,7 @@ class RDoc::Parser::Ruby < RDoc::Parser
       cls = parse_class_regular container, declaration_context, single,
         name_t, given_name, comment
     elsif name_t[:kind] == :on_op && name_t[:text] == '<<'
-      case name = get_class_specification
+      case name = skip_parentheses { get_class_specification }
       when 'self', container.name
         read_documentation_modifiers cls, RDoc::CLASS_MODIFIERS
         parse_statements container, SINGLE
@@ -64618,7 +64620,7 @@ class RDoc::Parser::Ruby < RDoc::Parser
 
 end
 # frozen_string_literal: true
-require 'rdoc'
+require_relative '../rdoc'
 require 'erb'
 require 'time'
 require 'json'
@@ -65524,11 +65526,12 @@ class RDoc::Stats
     [params.length, undoc]
   end
 
-  autoload :Quiet,   'rdoc/stats/quiet'
-  autoload :Normal,  'rdoc/stats/normal'
-  autoload :Verbose, 'rdoc/stats/verbose'
+  autoload :Quiet,   "#{__dir__}/stats/quiet"
+  autoload :Normal,  "#{__dir__}/stats/normal"
+  autoload :Verbose, "#{__dir__}/stats/verbose"
 
 end
+# frozen_string_literal: true
 
 module RDoc
 
@@ -65733,6 +65736,7 @@ class RDoc::Markdown::Literals
       @result = nil
       @failed_rule = nil
       @failing_rule_offset = -1
+      @line_offsets = nil
 
       setup_foreign_grammar
     end
@@ -65749,17 +65753,32 @@ class RDoc::Markdown::Literals
       target + 1
     end
 
-    def current_line(target=pos)
-      cur_offset = 0
-      cur_line = 0
+    if [].respond_to? :bsearch_index
+      def current_line(target=pos)
+        unless @line_offsets
+          @line_offsets = []
+          total = 0
+          string.each_line do |line|
+            total += line.size
+            @line_offsets << total
+          end
+        end
 
-      string.each_line do |line|
-        cur_line += 1
-        cur_offset += line.size
-        return cur_line if cur_offset >= target
+        @line_offsets.bsearch_index {|x| x >= target } + 1 || -1
       end
+    else
+      def current_line(target=pos)
+        cur_offset = 0
+        cur_line = 0
 
-      -1
+        string.each_line do |line|
+          cur_line += 1
+          cur_offset += line.size
+          return cur_line if cur_offset >= target
+        end
+
+        -1
+      end
     end
 
     def lines
@@ -69082,12 +69101,11 @@ class RDoc::RD
     document
   end
 
-  autoload :BlockParser,  'rdoc/rd/block_parser'
-  autoload :InlineParser, 'rdoc/rd/inline_parser'
-  autoload :Inline,       'rdoc/rd/inline'
+  autoload :BlockParser,  "#{__dir__}/rd/block_parser"
+  autoload :InlineParser, "#{__dir__}/rd/inline_parser"
+  autoload :Inline,       "#{__dir__}/rd/inline"
 
 end
-
 # frozen_string_literal: true
 require 'fileutils'
 
@@ -70186,6 +70204,7 @@ class RDoc::Options
     generator_options
     generators
     op_dir
+    page_dir
     option_parser
     pipe
     rdoc_include
@@ -70514,6 +70533,7 @@ class RDoc::Options
     @main_page      = map['main_page']      if map.has_key?('main_page')
     @markup         = map['markup']         if map.has_key?('markup')
     @op_dir         = map['op_dir']         if map.has_key?('op_dir')
+    @page_dir       = map['page_dir']       if map.has_key?('page_dir')
     @show_hash      = map['show_hash']      if map.has_key?('show_hash')
     @tab_width      = map['tab_width']      if map.has_key?('tab_width')
     @template_dir   = map['template_dir']   if map.has_key?('template_dir')
@@ -70593,19 +70613,22 @@ class RDoc::Options
   ##
   # For dumping YAML
 
-  def encode_with coder # :nodoc:
+  def to_yaml(*options) # :nodoc:
     encoding = @encoding ? @encoding.name : nil
 
-    coder.add 'encoding', encoding
-    coder.add 'static_path',  sanitize_path(@static_path)
-    coder.add 'rdoc_include', sanitize_path(@rdoc_include)
+    yaml = {}
+    yaml['encoding'] = encoding
+    yaml['static_path'] = sanitize_path(@static_path)
+    yaml['rdoc_include'] = sanitize_path(@rdoc_include)
+    yaml['page_dir'] = (sanitize_path([@page_dir]).first if @page_dir)
 
     ivars = instance_variables.map { |ivar| ivar.to_s[1..-1] }
     ivars -= SPECIAL
 
     ivars.sort.each do |ivar|
-      coder.add ivar, instance_variable_get("@#{ivar}")
+      yaml[ivar] = instance_variable_get("@#{ivar}")
     end
+    yaml.to_yaml
   end
 
   ##
@@ -70628,6 +70651,11 @@ class RDoc::Options
   # #template.
 
   def finish
+    if @write_options then
+      write_options
+      exit
+    end
+
     @op_dir ||= 'doc'
 
     @rdoc_include << "." if @rdoc_include.empty?
@@ -70665,14 +70693,14 @@ class RDoc::Options
   def finish_page_dir
     return unless @page_dir
 
-    @files << @page_dir.to_s
+    @files << @page_dir
 
-    page_dir = nil
+    page_dir = Pathname(@page_dir)
     begin
-      page_dir = @page_dir.expand_path.relative_path_from @root
+      page_dir = page_dir.expand_path.relative_path_from @root
     rescue ArgumentError
       # On Windows, sometimes crosses different drive letters.
-      page_dir = @page_dir.expand_path
+      page_dir = page_dir.expand_path
     end
 
     @page_dir = page_dir
@@ -70927,7 +70955,7 @@ Usage: #{opt.program_name} [options] [names...]
              "such files at your project root.",
              "NOTE: Do not use the same file name in",
              "the page dir and the root of your project") do |page_dir|
-        @page_dir = Pathname(page_dir)
+        @page_dir = page_dir
       end
 
       opt.separator nil
@@ -71239,13 +71267,6 @@ Usage: #{opt.program_name} [options] [names...]
 
     @files = argv.dup
 
-    finish
-
-    if @write_options then
-      write_options
-      exit
-    end
-
     self
   end
 
@@ -71358,7 +71379,7 @@ Usage: #{opt.program_name} [options] [names...]
     File.open '.rdoc_options', 'w' do |io|
       io.set_encoding Encoding::UTF_8
 
-      YAML.dump self, io
+      io.print to_yaml
     end
   end
 
@@ -71816,7 +71837,7 @@ begin
 rescue Gem::LoadError
 end unless defined?(Rake)
 
-require 'rdoc'
+require_relative '../rdoc'
 require 'rake'
 require 'rake/tasklib'
 
@@ -72142,7 +72163,7 @@ begin
 rescue LoadError
 end
 
-require 'rdoc'
+require_relative '../../rdoc'
 
 ##
 # For RubyGems backwards compatibility
@@ -77294,13 +77315,7 @@ class RDoc::Markup::AttributeManager
   def convert_attrs_matching_word_pairs(str, attrs, exclusive)
     # first do matching ones
     tags = @matching_word_pairs.select { |start, bitmap|
-      if exclusive && exclusive?(bitmap)
-        true
-      elsif !exclusive && !exclusive?(bitmap)
-        true
-      else
-        false
-      end
+      exclusive == exclusive?(bitmap)
     }.keys
     return if tags.empty?
     all_tags = @matching_word_pairs.keys
@@ -77323,11 +77338,7 @@ class RDoc::Markup::AttributeManager
     # then non-matching
     unless @word_pair_map.empty? then
       @word_pair_map.each do |regexp, attr|
-        if !exclusive
-          next if exclusive?(attr)
-        else
-          next if !exclusive?(attr)
-        end
+        next unless exclusive == exclusive?(attr)
         1 while str.gsub!(regexp) { |orig|
           updated = attrs.set_attrs($`.length + $1.length, $2.length, attr)
           if updated
@@ -77345,13 +77356,7 @@ class RDoc::Markup::AttributeManager
 
   def convert_html(str, attrs, exclusive = false)
     tags = @html_tags.select { |start, bitmap|
-      if exclusive && exclusive?(bitmap)
-        true
-      elsif !exclusive && !exclusive?(bitmap)
-        true
-      else
-        false
-      end
+      exclusive == exclusive?(bitmap)
     }.keys.join '|'
 
     1 while str.gsub!(/<(#{tags})>(.*?)<\/\1>/i) { |orig|
@@ -77368,11 +77373,7 @@ class RDoc::Markup::AttributeManager
 
   def convert_regexp_handlings str, attrs, exclusive = false
     @regexp_handlings.each do |regexp, attribute|
-      if exclusive
-        next if !exclusive?(attribute)
-      else
-        next if exclusive?(attribute)
-      end
+      next unless exclusive == exclusive?(attribute)
       str.scan(regexp) do
         capture = $~.size == 1 ? 0 : 1
 
@@ -80742,7 +80743,7 @@ end
 # frozen_string_literal: true
 #
 # DO NOT MODIFY!!!!
-# This file is automatically generated by Racc 1.5.2
+# This file is automatically generated by Racc 1.6.0
 # from Racc grammar file "".
 #
 
@@ -81870,7 +81871,7 @@ end
 # frozen_string_literal: true
 #
 # DO NOT MODIFY!!!!
-# This file is automatically generated by Racc 1.5.2
+# This file is automatically generated by Racc 1.6.0
 # from Racc grammar file "".
 #
 
@@ -83078,7 +83079,7 @@ end
 # frozen_string_literal: true
 require 'rubygems/user_interaction'
 require 'fileutils'
-require 'rdoc'
+require_relative '../rdoc'
 
 ##
 # Gem::RDoc provides methods to generate RDoc and ri data for installed gems
@@ -84586,7 +84587,7 @@ class RDoc::Context < RDoc::CodeObject
     klass
   end
 
-  autoload :Section, 'rdoc/context/section'
+  autoload :Section, "#{__dir__}/context/section"
 
 end
 # frozen_string_literal: true
@@ -84632,12 +84633,12 @@ end
 
 module RDoc::Generator
 
-  autoload :Markup,   'rdoc/generator/markup'
+  autoload :Markup,   "#{__dir__}/generator/markup"
 
-  autoload :Darkfish,  'rdoc/generator/darkfish'
-  autoload :JsonIndex, 'rdoc/generator/json_index'
-  autoload :RI,        'rdoc/generator/ri'
-  autoload :POT,       'rdoc/generator/pot'
+  autoload :Darkfish,  "#{__dir__}/generator/darkfish"
+  autoload :JsonIndex, "#{__dir__}/generator/json_index"
+  autoload :RI,        "#{__dir__}/generator/ri"
+  autoload :POT,       "#{__dir__}/generator/pot"
 
 end
 # frozen_string_literal: true
@@ -85827,7 +85828,7 @@ class RDoc::ClassModule < RDoc::Context
 end
 
 # frozen_string_literal: true
-require 'rdoc'
+require_relative '../rdoc'
 
 require 'find'
 require 'fileutils'
@@ -86268,11 +86269,11 @@ The internal error was:
 
     if RDoc::Options === options then
       @options = options
-      @options.finish
     else
       @options = RDoc::Options.load_options
       @options.parse options
     end
+    @options.finish
 
     if @options.pipe then
       handle_pipe
@@ -87624,56 +87625,55 @@ https://github.com/ruby/rdoc/issues
     document.accept formatter
   end
 
-  autoload :Parser,                'rdoc/markup/parser'
-  autoload :PreProcess,            'rdoc/markup/pre_process'
+  autoload :Parser,                "#{__dir__}/markup/parser"
+  autoload :PreProcess,            "#{__dir__}/markup/pre_process"
 
   # Inline markup classes
-  autoload :AttrChanger,           'rdoc/markup/attr_changer'
-  autoload :AttrSpan,              'rdoc/markup/attr_span'
-  autoload :Attributes,            'rdoc/markup/attributes'
-  autoload :AttributeManager,      'rdoc/markup/attribute_manager'
-  autoload :RegexpHandling,        'rdoc/markup/regexp_handling'
+  autoload :AttrChanger,           "#{__dir__}/markup/attr_changer"
+  autoload :AttrSpan,              "#{__dir__}/markup/attr_span"
+  autoload :Attributes,            "#{__dir__}/markup/attributes"
+  autoload :AttributeManager,      "#{__dir__}/markup/attribute_manager"
+  autoload :RegexpHandling,        "#{__dir__}/markup/regexp_handling"
 
   # RDoc::Markup AST
-  autoload :BlankLine,             'rdoc/markup/blank_line'
-  autoload :BlockQuote,            'rdoc/markup/block_quote'
-  autoload :Document,              'rdoc/markup/document'
-  autoload :HardBreak,             'rdoc/markup/hard_break'
-  autoload :Heading,               'rdoc/markup/heading'
-  autoload :Include,               'rdoc/markup/include'
-  autoload :IndentedParagraph,     'rdoc/markup/indented_paragraph'
-  autoload :List,                  'rdoc/markup/list'
-  autoload :ListItem,              'rdoc/markup/list_item'
-  autoload :Paragraph,             'rdoc/markup/paragraph'
-  autoload :Table,                 'rdoc/markup/table'
-  autoload :Raw,                   'rdoc/markup/raw'
-  autoload :Rule,                  'rdoc/markup/rule'
-  autoload :Verbatim,              'rdoc/markup/verbatim'
+  autoload :BlankLine,             "#{__dir__}/markup/blank_line"
+  autoload :BlockQuote,            "#{__dir__}/markup/block_quote"
+  autoload :Document,              "#{__dir__}/markup/document"
+  autoload :HardBreak,             "#{__dir__}/markup/hard_break"
+  autoload :Heading,               "#{__dir__}/markup/heading"
+  autoload :Include,               "#{__dir__}/markup/include"
+  autoload :IndentedParagraph,     "#{__dir__}/markup/indented_paragraph"
+  autoload :List,                  "#{__dir__}/markup/list"
+  autoload :ListItem,              "#{__dir__}/markup/list_item"
+  autoload :Paragraph,             "#{__dir__}/markup/paragraph"
+  autoload :Table,                 "#{__dir__}/markup/table"
+  autoload :Raw,                   "#{__dir__}/markup/raw"
+  autoload :Rule,                  "#{__dir__}/markup/rule"
+  autoload :Verbatim,              "#{__dir__}/markup/verbatim"
 
   # Formatters
-  autoload :Formatter,             'rdoc/markup/formatter'
+  autoload :Formatter,             "#{__dir__}/markup/formatter"
 
-  autoload :ToAnsi,                'rdoc/markup/to_ansi'
-  autoload :ToBs,                  'rdoc/markup/to_bs'
-  autoload :ToHtml,                'rdoc/markup/to_html'
-  autoload :ToHtmlCrossref,        'rdoc/markup/to_html_crossref'
-  autoload :ToHtmlSnippet,         'rdoc/markup/to_html_snippet'
-  autoload :ToLabel,               'rdoc/markup/to_label'
-  autoload :ToMarkdown,            'rdoc/markup/to_markdown'
-  autoload :ToRdoc,                'rdoc/markup/to_rdoc'
-  autoload :ToTableOfContents,     'rdoc/markup/to_table_of_contents'
-  autoload :ToTest,                'rdoc/markup/to_test'
-  autoload :ToTtOnly,              'rdoc/markup/to_tt_only'
+  autoload :ToAnsi,                "#{__dir__}/markup/to_ansi"
+  autoload :ToBs,                  "#{__dir__}/markup/to_bs"
+  autoload :ToHtml,                "#{__dir__}/markup/to_html"
+  autoload :ToHtmlCrossref,        "#{__dir__}/markup/to_html_crossref"
+  autoload :ToHtmlSnippet,         "#{__dir__}/markup/to_html_snippet"
+  autoload :ToLabel,               "#{__dir__}/markup/to_label"
+  autoload :ToMarkdown,            "#{__dir__}/markup/to_markdown"
+  autoload :ToRdoc,                "#{__dir__}/markup/to_rdoc"
+  autoload :ToTableOfContents,     "#{__dir__}/markup/to_table_of_contents"
+  autoload :ToTest,                "#{__dir__}/markup/to_test"
+  autoload :ToTtOnly,              "#{__dir__}/markup/to_tt_only"
 
 end
-
 # frozen_string_literal: true
 ##
 # This module provides i18n related features.
 
 module RDoc::I18n
 
-  autoload :Locale, 'rdoc/i18n/locale'
+  autoload :Locale, "#{__dir__}/i18n/locale"
   require_relative 'i18n/text'
 
 end
@@ -87979,7 +87979,7 @@ class RDoc::Constant < RDoc::CodeObject
 end
 
 # frozen_string_literal: true
-require 'rdoc'
+require_relative '../rdoc'
 
 ##
 # Namespace for the ri command line tool's implementation.
@@ -87993,12 +87993,11 @@ module RDoc::RI
 
   class Error < RDoc::Error; end
 
-  autoload :Driver, 'rdoc/ri/driver'
-  autoload :Paths,  'rdoc/ri/paths'
-  autoload :Store,  'rdoc/ri/store'
+  autoload :Driver, "#{__dir__}/ri/driver"
+  autoload :Paths,  "#{__dir__}/ri/paths"
+  autoload :Store,  "#{__dir__}/ri/store"
 
 end
-
 # frozen_string_literal: true
 ##
 # Abstract class representing either a method or an attribute.
@@ -88974,7 +88973,7 @@ class RDoc::CrossReference
   #
   # See CLASS_REGEXP_STR
 
-  METHOD_REGEXP_STR = '([A-Za-z]\w*[!?=]?|%|===?|\[\]=?|<<|>>|\+@|-@|-|\+|\*)(?:\([\w.+*/=<>-]*\))?'
+  METHOD_REGEXP_STR = '([A-Za-z]\w*[!?=]?|%|=(?:==?|~)|![=~]|\[\]=?|<(?:<|=>?)?|>[>=]?|[-+!]@?|\*\*?|[/%`|&^~])(?:\([\w.+*/=<>-]*\))?'
 
   ##
   # Regular expressions matching text that should potentially have
@@ -89428,8 +89427,8 @@ class RDoc::Parser
     @preprocess.options = @options
   end
 
-  autoload :RubyTools, 'rdoc/parser/ruby_tools'
-  autoload :Text,      'rdoc/parser/text'
+  autoload :RubyTools, "#{__dir__}/parser/ruby_tools"
+  autoload :Text,      "#{__dir__}/parser/text"
 
 end
 
@@ -89807,8 +89806,7 @@ end
 # This file was used to load all the RDoc::CodeObject subclasses at once.  Now
 # autoload handles this.
 
-require 'rdoc'
-
+require_relative '../rdoc'
 # frozen_string_literal: true
 ##
 # A section of documentation like:
