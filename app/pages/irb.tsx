@@ -111,7 +111,7 @@ const Irb: FC = () => {
       <h1 className="mb-5">irb on WASM (very experimental)</h1>
       <p>Note: This works on only Chrome before version 91</p>
       <p>{message}</p>
-      <Term onXterm={onXterm} needLocalEcho={true} />
+      <Term onXterm={onXterm} needFit={true} needLocalEcho={true} />
       <p className="mt-4">
         <Link href="/">Back to top</Link>
       </p>

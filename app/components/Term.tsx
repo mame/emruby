@@ -6,10 +6,11 @@ const LocalEchoController = require("local-echo").default;
 
 interface Props {
   onXterm: (xterm: Terminal, localEcho?: any) => void;
+  needFit: boolean;
   needLocalEcho: boolean;
 }
 
-const Term: FC<Props> = ({ onXterm, needLocalEcho }) => {
+const Term: FC<Props> = ({ onXterm, needFit, needLocalEcho }) => {
   const xtermRef = useRef<Terminal>(null) as MutableRefObject<Terminal>;
   const divRef = useRef<HTMLDivElement>(null);
 
@@ -22,8 +23,11 @@ const Term: FC<Props> = ({ onXterm, needLocalEcho }) => {
     }
     const xterm = xtermRef.current;
 
-    const fitAddon = new FitAddon();
-    xterm.loadAddon(fitAddon);
+    let fitAddon: FitAddon | null = null;
+    if (needFit) {
+      fitAddon = new FitAddon();
+      xterm.loadAddon(fitAddon);
+    }
     let localEcho: any = null;
     if (needLocalEcho) {
       localEcho = new LocalEchoController();
@@ -32,7 +36,7 @@ const Term: FC<Props> = ({ onXterm, needLocalEcho }) => {
     onXterm(xterm, localEcho);
 
     xterm.open(elem);
-    fitAddon.fit();
+    fitAddon?.fit();
 
     return () => {
       if (needLocalEcho) {
@@ -40,7 +44,7 @@ const Term: FC<Props> = ({ onXterm, needLocalEcho }) => {
       }
       xterm.dispose();
     };
-  }, [divRef, onXterm, needLocalEcho]);
+  }, [divRef, onXterm, needFit, needLocalEcho]);
 
   return <div ref={divRef}></div>;
 };

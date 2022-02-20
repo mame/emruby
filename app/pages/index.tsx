@@ -113,7 +113,7 @@ const Home: FC = () => {
         )}
       </Button>
       <h2 className="mt-4">Result</h2>
-      <Term onXterm={onXterm} needLocalEcho={false} />
+      <Term onXterm={onXterm} needFit={true} needLocalEcho={false} />
       <h2 className="mt-4">See also</h2>
       <ul>
         <li>
