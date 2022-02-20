@@ -74,7 +74,7 @@ const Irb: FC = () => {
   return (
     <div className="container-fluid">
       <Head>
-        <title>irb on WASM (very experimental)</title>
+        <title>irb with reline (very experimental)</title>
       </Head>
       <h1 className="mb-5">irb on WASM (very experimental)</h1>
       <p>Note: This works on only Chrome before version 91</p>

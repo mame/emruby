@@ -117,7 +117,8 @@ const Home: FC = () => {
       <h2 className="mt-4">See also</h2>
       <ul>
         <li>
-          <Link href="/irb">irb on WASM (very experimental)</Link>
+          <Link href="/irb">irb (experimental)</Link>
+          <Link href="/irb-reline">irb with reline (very experimental)</Link>
         </li>
         <li>
           <Link href="https://github.com/mame/emruby">source (github)</Link>
