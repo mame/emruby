@@ -40,7 +40,7 @@ p StringIO.new("foobar").read(3)
 
 puts
 puts "# Use an ruby library (did_you_mean) and show an exception"
-StrngIO`;
+StringIO`;
 
 const Home: FC = () => {
   const [xterm, setXterm] = useState<Terminal>();
